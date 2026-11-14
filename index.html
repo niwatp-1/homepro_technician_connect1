@@ -95,15 +95,19 @@
                 <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
                 <span>รายงาน & Export Excel</span>
             </a>
-            <div class="pt-5 pb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</div>
-            <a href="#" onclick="switchView('users')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="users">
-                <i data-lucide="user-cog" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
-                <span>จัดการผู้ใช้งาน</span>
-            </a>
-            <a href="#" onclick="switchView('audit-logs')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="audit-logs">
-                <i data-lucide="shield-alert" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
-                <span>Audit Logs</span>
-            </a>
+
+            <!-- Administration Section (Visible only for Super Admin) -->
+            <div id="admin-sidebar-section" style="display: none;">
+                <div class="pt-5 pb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</div>
+                <a href="#" onclick="switchView('users')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="users">
+                    <i data-lucide="user-cog" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                    <span>จัดการผู้ใช้งาน</span>
+                </a>
+                <a href="#" onclick="switchView('audit-logs')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="audit-logs">
+                    <i data-lucide="shield-alert" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                    <span>Audit Logs</span>
+                </a>
+            </div>
         </nav>
 
         <div class="p-4 bg-blue-950 border-t border-blue-900 text-xs text-blue-300 flex justify-between items-center flex-shrink-0">
@@ -119,7 +123,7 @@
 
     <!-- Main Content Wrapper -->
     <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-gray-50">
-        <!-- Topbar (Optimized for Mobile Header Clutter & Overflow) -->
+        <!-- Topbar -->
         <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10 shadow-sm flex-shrink-0 w-full">
             <div class="flex items-center space-x-3 min-w-0">
                 <button onclick="toggleMobileSidebar()" class="lg:hidden text-gray-600 hover:text-homepro-blue focus:outline-none flex-shrink-0">
@@ -152,6 +156,24 @@
             
             <!-- Dashboard View -->
             <div id="view-dashboard" class="space-y-6 w-full view-section">
+                <!-- Date Filter Bar -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200/80 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-homepro-blue"></i>
+                        <span class="font-bold text-gray-800 text-sm">ช่วงเวลาแสดงผลข้อมูล:</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="setDashboardDatePreset('all')" id="preset-all" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-homepro-blue text-white transition-colors">ทั้งหมด</button>
+                        <button onclick="setDashboardDatePreset('30days')" id="preset-30days" class="px-3 py-1.5 text-xs font-semibold rounded-lg border text-gray-600 hover:bg-gray-50 transition-colors">30 วันล่าสุด</button>
+                        <button onclick="setDashboardDatePreset('thisMonth')" id="preset-thisMonth" class="px-3 py-1.5 text-xs font-semibold rounded-lg border text-gray-600 hover:bg-gray-50 transition-colors">เดือนนี้</button>
+                        <div class="flex items-center space-x-1 border-l pl-2 border-gray-200">
+                            <input type="date" id="dash-start-date" onchange="onCustomDateChange()" class="border border-gray-300 rounded-lg px-2.5 py-1 text-xs">
+                            <span class="text-gray-400 text-xs">ถึง</span>
+                            <input type="date" id="dash-end-date" onchange="onCustomDateChange()" class="border border-gray-300 rounded-lg px-2.5 py-1 text-xs">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 w-full">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 flex items-center justify-between">
                         <div>
@@ -221,8 +243,6 @@
                     </div>
                     <div class="h-56"><canvas id="ch-top"></canvas></div>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full"><div id="idle-box"></div><div id="notech-box"></div></div>
-                <div id="followup-box"></div>
             </div>
 
             <!-- Placeholders -->
@@ -261,7 +281,10 @@
                 </div>
                 <div id="rel-detail" class="mt-6"></div>
             </div>
+            
+            <!-- Team Performance View -->
             <div id="view-team-performance" class="view-section hidden w-full"><div id="team-box"></div></div>
+
             <div id="view-reports" class="view-section hidden w-full">
                 <div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8">
                     <h3 class="font-bold text-gray-800 text-xl">รายงาน & Export Excel</h3>
@@ -300,9 +323,9 @@
 
 <script>
 /* ========================================================================== */
-/* 🛠️ กำหนด URL Web App ของ Google Apps Script ที่นี่ (แทนการกรอกหน้าจอ)       */
+/* 🛠️ กำหนด URL Web App ของ Google Apps Script ที่นี่                         */
 /* ========================================================================== */
-const API_URL_CONST = 'https://script.google.com/macros/s/AKfycbxEZmmPn37mj_mfbCoHfrbsusGUDpE1ttGveYXg6PZwOthz58Ivc3gJoJ6NDh-QJwbD/exec';
+const API_URL_CONST = 'https://script.google.com/macros/s/AKfycbz2i530fEz3fzjQ7lsNX_BU1FioSBdkgCYfnVgEhPOOnwZU9CjAwDRoMexXO-wZwiGy/exec';
 
 /* ============ Config & Entities ============ */
 const ENT = {
@@ -359,7 +382,7 @@ const VIEW_TITLES = {
   sites: 'จัดการหน้างาน & ไฟล์', assignments: 'ช่างสร้างบ้านให้ลูกค้า', relationships: 'ช่าง ↔ ลูกค้าบ้าน',
   'team-performance': 'ผลงานทีม (Manager)', reports: 'รายงาน & Export Excel', users: 'จัดการผู้ใช้งาน', 'audit-logs': 'Audit Logs'
 };
-let DB = { technicians: [], homeowners: [], sites: [], assignments: [], files: [], users: [] };
+let DB = { technicians: [], homeowners: [], sites: [], assignments: [], files: [], users: [], userNames: [] };
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -416,38 +439,36 @@ function toggleMobileSidebar() {
   document.getElementById('sidebar-backdrop').classList.toggle('hidden');
 }
 function switchView(name) {
-    if (window.event) {
-        if (window.event.preventDefault) window.event.preventDefault();
-        if (window.event.stopPropagation) window.event.stopPropagation();
-    }
-    
-    document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
-    const el = document.getElementById('view-' + name);
-    if (el) el.classList.remove('hidden');
-    
-    document.querySelectorAll('.nav-link').forEach(a => {
-        const on = a.dataset.view === name;
-        a.classList.toggle('bg-blue-900', on);
-        a.classList.toggle('font-semibold', on);
-    });
-    
-    document.getElementById('page-title').textContent = VIEW_TITLES[name] || name;
-    document.getElementById('page-breadcrumb').textContent = 'HomePro Technician Connect > ' + (VIEW_TITLES[name] || name);
-    
-    // บังคับปิด Sidebar ทันทีบนมือถือ
-    const sidebar = document.getElementById('sidebar');
-    const backdrop = document.getElementById('sidebar-backdrop');
-    if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
-        sidebar.classList.add('-translate-x-full');
-    }
-    if (backdrop && !backdrop.classList.contains('hidden')) {
-        backdrop.classList.add('hidden');
-    }
-    
-    document.getElementById('main-content-area').scrollTop = 0;
-    if (name === 'audit-logs') loadAudit();
-    if (name === 'dashboard') renderCharts();
+  if (window.event) {
+    if (window.event.preventDefault) window.event.preventDefault();
+    if (window.event.stopPropagation) window.event.stopPropagation();
+  }
+  document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+  const el = document.getElementById('view-' + name);
+  if (el) el.classList.remove('hidden');
+  document.querySelectorAll('.nav-link').forEach(a => {
+    const on = a.dataset.view === name;
+    a.classList.toggle('bg-blue-900', on);
+    a.classList.toggle('font-semibold', on);
+  });
+  document.getElementById('page-title').textContent = VIEW_TITLES[name] || name;
+  document.getElementById('page-breadcrumb').textContent = 'HomePro Technician Connect > ' + (VIEW_TITLES[name] || name);
+  
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+    sidebar.classList.add('-translate-x-full');
+  }
+  if (backdrop && !backdrop.classList.contains('hidden')) {
+    backdrop.classList.add('hidden');
+  }
+
+  document.getElementById('main-content-area').scrollTop = 0;
+  if (name === 'audit-logs') loadAudit();
+  if (name === 'dashboard') renderCharts();
+  if (name === 'team-performance') renderTeam();
 }
+
 function cellValue(f, row) {
   const v = row[f.k] || (f.k === 'homeownerId' ? homeownerIdOf(row) : '');
   if (f.type === 'ref') {
@@ -679,149 +700,251 @@ function sheetRows(key) {
   const fields = key === 'files' ? FILE_FIELDS : ENT[key].fields;
   return DB[key].map(r => {
     const o = { 'ID': r.id };
-    fields.forEach(f => { o[f.l] = f.type === 'ref' ? cellValue(f, r) : (r[f.k] || ''); });
-    if (key !== 'files') (ENT[key].extra || []).forEach(e => { o[e.l] = e.ids(r).map(i => { const x = DB[e.k].find(y => y.id === i); return x ? REL_TYPES[e.k].lab(x) : ''; }).join(', '); });
-    o['สร้างเมื่อ'] = r.createdAt; o['สร้างโดย'] = r.createdBy;
+    fields.forEach(f => { o[f.l] = cellValue(f, r); });
+    o['วันที่สร้าง'] = r.createdAt || '';
+    o['ผู้สร้าง'] = r.createdBy || '';
     return o;
   });
 }
-function exportExcel(key) {
-  if (!window.XLSX) { Swal.fire('ไม่พบไลบรารี Excel', '', 'error'); return; }
-  const keys = key === 'all' ? ['technicians', 'homeowners', 'sites', 'assignments', 'files'] : [key];
-  const names = { technicians: 'ลูกค้าช่าง', homeowners: 'ลูกค้าบ้าน', sites: 'หน้างาน', assignments: 'ช่างสร้างบ้านให้ลูกค้า', files: 'ไฟล์หน้างาน' };
+const SHEET_NAMES = { technicians: 'ลูกค้าช่าง', homeowners: 'ลูกค้าบ้าน', sites: 'หน้างาน', assignments: 'ช่างสร้างบ้านให้ลูกค้า', files: 'ไฟล์หน้างาน' };
+function exportExcel(k) {
+  if (typeof XLSX === 'undefined') return Swal.fire('ส่งออกไม่ได้', 'โหลดไลบรารี Excel ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า', 'error');
+  const keys = k === 'all' ? Object.keys(SHEET_NAMES) : [k];
+  if (!keys.some(x => (DB[x] || []).length)) return Swal.fire('ไม่มีข้อมูล', 'ยังไม่มีข้อมูลให้ส่งออก', 'info');
   const wb = XLSX.utils.book_new();
-  keys.forEach(k => {
-    const rows = sheetRows(k);
-    const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 'ไม่มีข้อมูล': '' }]);
-    XLSX.utils.book_append_sheet(wb, ws, names[k]);
+  keys.forEach(key => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetRows(key)), SHEET_NAMES[key]));
+  XLSX.writeFile(wb, 'HomePro_' + k + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+const REL_TYPES = {
+  technicians: { title: 'ลูกค้าช่าง', lab: r => r.name + ' (' + r.phone + ')' },
+  homeowners: { title: 'ลูกค้าบ้าน', lab: r => r.homecard + ' - ' + r.name },
+  sites: { title: 'หน้างาน', lab: r => r.siteName }
+};
+
+function relSearch() {
+  const q = (document.getElementById('rel-q').value || '').trim().toLowerCase();
+  const box = document.getElementById('rel-results');
+  if (!box) return;
+  if (!q) { box.innerHTML = ''; document.getElementById('rel-detail').innerHTML = ''; return; }
+  const match = [];
+  ['technicians', 'homeowners', 'sites'].forEach(k => {
+    DB[k].forEach(r => {
+      const text = Object.values(r).join(' ').toLowerCase();
+      if (text.includes(q)) match.push({ k, r });
+    });
   });
-  const d = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, 'HomePro_TechConnect_' + (key === 'all' ? 'all' : key) + '_' + d + '.xlsx');
-  toast('success', 'ส่งออกไฟล์ Excel แล้ว');
+  box.innerHTML = match.length ? match.slice(0, 15).map(m => `<button onclick="relShow('${m.k}','${esc(m.r.id)}')" class="px-3 py-1.5 bg-blue-50 text-homepro-blue rounded-xl text-xs font-semibold hover:bg-blue-100">${esc(REL_TYPES[m.k].title)}: ${esc(REL_TYPES[m.k].lab(m.r))}</button>`).join('') : '<span class="text-xs text-gray-400">ไม่พบข้อมูลที่ค้นหา</span>';
 }
 
-/* Audit Logs */
-async function loadAudit() {
-  const box = document.getElementById('audit-box');
-  box.innerHTML = '<div class="bg-white p-6 rounded-2xl border text-sm text-gray-400">กำลังโหลด...</div>';
-  try {
-    const rows = await api('getAuditLogs', 200);
-    const act = { create: 'เพิ่ม', update: 'แก้ไข', delete: 'ลบ', upload: 'อัปโหลด', import: 'นำเข้า', login: 'เข้าสู่ระบบ' };
-    box.innerHTML = `<div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8">
-      <div class="flex justify-between items-center pb-4 border-b border-gray-100"><div><h3 class="font-bold text-gray-800 text-xl">Audit Logs</h3><p class="text-xs text-gray-500 mt-1">200 รายการล่าสุด</p></div>
-      <button onclick="loadAudit()" class="text-homepro-blue text-sm font-semibold hover:underline">รีเฟรช</button></div>
-      <div class="overflow-x-auto mt-4"><table class="min-w-full"><thead class="bg-gray-50"><tr>${['เวลา', 'ผู้ใช้', 'การกระทำ', 'ตาราง', 'รหัส'].map(h => `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">${h}</th>`).join('')}</tr></thead><tbody>
-      ${rows.length ? rows.map(r => `<tr class="border-t border-gray-100"><td class="px-4 py-2 text-xs text-gray-500 whitespace-nowrap">${esc(r.timestamp)}</td><td class="px-4 py-2 text-sm">${esc(r.user)}</td><td class="px-4 py-2 text-sm font-semibold">${esc(act[r.action] || r.action)}</td><td class="px-4 py-2 text-sm">${esc(r.entity)}</td><td class="px-4 py-2 text-xs text-gray-500">${esc(r.recordId)}</td></tr>`).join('') : '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">ยังไม่มีบันทึก</td></tr>'}
-      </tbody></table></div></div>`;
-  } catch (e) { box.innerHTML = `<div class="bg-white p-6 rounded-2xl border text-sm text-red-500">${esc(e.message || e)}</div>`; }
+function relShow(k, id) {
+  const r = DB[k].find(x => x.id === id);
+  const detail = document.getElementById('rel-detail');
+  if (!r || !detail) return;
+  const techs = k === 'technicians' ? [id] : k === 'homeowners' ? techsOfHomeowner(id) : DB.assignments.filter(a => a.siteId === id).map(a => a.technicianId);
+  const homes = k === 'homeowners' ? [id] : k === 'technicians' ? homeownersOfTech(id) : [homeownerIdOf(DB.assignments.find(a => a.siteId === id) || {})].filter(Boolean);
+  const sites = DB.sites.filter(s => s.homeownerId && homes.includes(s.homeownerId));
+  detail.innerHTML = `<div class="bg-white rounded-2xl shadow-sm border p-6 space-y-6">
+    <div class="flex justify-between items-start"><h4 class="font-bold text-gray-800 text-lg">${esc(REL_TYPES[k].title)}: ${esc(REL_TYPES[k].lab(r))}</h4><button onclick="document.getElementById('rel-detail').innerHTML=''" class="text-gray-400 hover:text-gray-600 text-xs">ปิด</button></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-4 bg-gray-50 rounded-xl"><h5 class="font-bold text-xs text-gray-500 uppercase">ลูกค้าช่างที่เกี่ยวข้อง</h5><div class="mt-2 space-y-1">${techs.map(i => { const x = DB.technicians.find(y => y.id === i); return x ? `<p class="text-sm font-semibold text-gray-800">${esc(x.name)} (${esc(x.phone)})</p>` : ''; }).join('') || '<p class="text-xs text-gray-400">ไม่มี</p>'}</div></div>
+      <div class="p-4 bg-gray-50 rounded-xl"><h5 class="font-bold text-xs text-gray-500 uppercase">ลูกค้าบ้านที่เกี่ยวข้อง</h5><div class="mt-2 space-y-1">${homes.map(i => { const x = DB.homeowners.find(y => y.id === i); return x ? `<p class="text-sm font-semibold text-gray-800">${esc(x.homecard)} - ${esc(x.name)}</p>` : ''; }).join('') || '<p class="text-xs text-gray-400">ไม่มี</p>'}</div></div>
+      <div class="p-4 bg-gray-50 rounded-xl"><h5 class="font-bold text-xs text-gray-500 uppercase">หน้างาน</h5><div class="mt-2 space-y-1">${sites.map(s => `<p class="text-sm font-semibold text-gray-800">${esc(s.siteName)}</p>`).join('') || '<p class="text-xs text-gray-400">ไม่มี</p>'}</div></div>
+    </div></div>`;
 }
 
 /* Team Performance & Relationships */
 function renderTeam() {
-  const box = document.getElementById('team-box'); if (!box) return;
-  const keys = ['technicians', 'homeowners', 'sites', 'assignments', 'files'];
-  const cutoff = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-  const by = {};
-  keys.forEach(k => DB[k].forEach(r => {
-    const u = r.createdBy || 'ไม่ระบุ';
-    const o = by[u] || (by[u] = { total: 0, recent: 0 });
-    o[k] = (o[k] || 0) + 1; o.total++;
-    if ((r.createdAt || '') >= cutoff) o.recent++;
-  }));
-  const rows = Object.entries(by).sort((a, b) => b[1].total - a[1].total);
-  const max = rows.length ? rows[0][1].total : 1;
-  const total = rows.reduce((n, [, o]) => n + o.total, 0);
-  const card = (t, v) => `<div class="bg-white p-5 rounded-2xl border shadow-sm"><p class="text-xs font-semibold uppercase text-gray-500">${t}</p><h3 class="text-3xl font-bold text-gray-800 mt-1">${v}</h3></div>`;
+  const box = document.getElementById('team-box'); 
+  if (!box) return;
+
+  const userMap = {};
+  (DB.userNames || []).forEach(u => {
+    if (u && u.username) {
+      userMap[u.username.toLowerCase()] = u.name || u.username;
+    }
+  });
+  const getAuthorName = (uname) => {
+    if (!uname) return 'ระบบ / ไม่ระบุ';
+    return userMap[uname.toLowerCase()] || uname;
+  };
+
+  const stats = {};
+  const entities = ['technicians', 'homeowners', 'sites', 'assignments'];
+  
+  entities.forEach(key => {
+    (DB[key] || []).forEach(item => {
+      const author = item.createdBy || 'unknown';
+      if (!stats[author]) {
+        stats[author] = { username: author, name: getAuthorName(author), technicians: 0, homeowners: 0, sites: 0, assignments: 0, totalValue: 0 };
+      }
+      stats[author][key]++;
+      if (key === 'assignments' && item.value && !isNaN(Number(item.value))) {
+        stats[author].totalValue += Number(item.value);
+      }
+    });
+  });
+
+  const userStatsList = Object.values(stats).sort((a, b) => (b.technicians + b.homeowners + b.sites + b.assignments) - (a.technicians + a.homeowners + a.sites + a.assignments));
+
   box.innerHTML = `
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">${card('รายการที่บันทึกทั้งหมด', total)}${card('พนักงานที่มีผลงาน', rows.length)}${card('บันทึกใน 30 วันล่าสุด', rows.reduce((n, [, o]) => n + o.recent, 0))}</div>
-    <div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8 mt-6">
-      <h3 class="font-bold text-gray-800 text-xl">ผลงานทีมแยกตามผู้บันทึก</h3>
-      <div class="overflow-x-auto mt-4"><table class="min-w-full"><thead class="bg-gray-50"><tr>
-        ${['ผู้บันทึก', 'ลูกค้าช่าง', 'ลูกค้าบ้าน', 'หน้างาน', 'ช่าง–ลูกค้าบ้าน', 'ไฟล์', '30 วัน', 'รวม'].map(h => `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap">${h}</th>`).join('')}</tr></thead><tbody>
-        ${rows.length ? rows.map(([u, o]) => `<tr class="border-t border-gray-100">
-          <td class="px-4 py-3 text-sm font-semibold text-gray-800">${esc(u)}</td>
-          ${keys.map(k => `<td class="px-4 py-3 text-sm text-gray-700">${o[k] || 0}</td>`).join('')}
-          <td class="px-4 py-3 text-sm text-gray-700">${o.recent}</td>
-          <td class="px-4 py-3 w-48"><div class="flex items-center gap-2"><div class="h-2 rounded-full bg-homepro-blue" style="width:${Math.round(o.total / max * 100)}%"></div><span class="text-sm font-bold">${o.total}</span></div></td></tr>`).join('')
-          : '<tr><td colspan="8" class="px-4 py-8 text-center text-sm text-gray-400">ยังไม่มีข้อมูล</td></tr>'}
-      </tbody></table></div></div>`;
+    <div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8 space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-100">
+        <div>
+          <h3 class="font-bold text-gray-800 text-xl flex items-center">
+            <i data-lucide="bar-chart-3" class="w-6 h-6 text-homepro-blue mr-2.5"></i> ผลงานทีมแยกตามผู้บันทึก (Team Performance)
+          </h3>
+          <p class="text-xs text-gray-500 mt-1">สรุปสถิติจำนวนรายการที่ผู้ใช้งานแต่ละท่านบันทึกลงในระบบ</p>
+        </div>
+        <div class="text-xs bg-blue-50 text-homepro-blue px-3 py-1.5 rounded-lg font-semibold">
+          ผู้บันทึกทั้งหมด: ${userStatsList.length} ท่าน
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        ${userStatsList.map(u => {
+          const totalRecords = u.technicians + u.homeowners + u.sites + u.assignments;
+          return `
+            <div class="bg-gray-50 border border-gray-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div>
+                <div class="flex items-center space-x-3 mb-3">
+                  <div class="w-10 h-10 rounded-full bg-homepro-blue text-white font-bold flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                    ${esc((u.name || u.username).slice(0, 2).toUpperCase())}
+                  </div>
+                  <div class="min-w-0">
+                    <h4 class="font-bold text-gray-800 text-sm truncate" title="${esc(u.name)}">${esc(u.name)}</h4>
+                    <p class="text-xs text-gray-400 truncate">@${esc(u.username)}</p>
+                  </div>
+                </div>
+                <div class="space-y-1.5 text-xs text-gray-600 border-t pt-3 border-gray-200">
+                  <div class="flex justify-between"><span>ลูกค้าช่าง:</span><span class="font-bold text-gray-800">${u.technicians}</span></div>
+                  <div class="flex justify-between"><span>ลูกค้าบ้าน:</span><span class="font-bold text-gray-800">${u.homeowners}</span></div>
+                  <div class="flex justify-between"><span>หน้างาน:</span><span class="font-bold text-gray-800">${u.sites}</span></div>
+                  <div class="flex justify-between"><span>ช่างสร้างบ้าน:</span><span class="font-bold text-gray-800">${u.assignments}</span></div>
+                  ${u.totalValue > 0 ? `<div class="flex justify-between text-homepro-blue font-semibold pt-1 border-t border-dashed border-gray-200"><span>มูลค่างานรวม:</span><span>฿${u.totalValue.toLocaleString('th-TH')}</span></div>` : ''}
+                </div>
+              </div>
+              <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center text-xs">
+                <span class="text-gray-400 font-medium">รวมทั้งหมด</span>
+                <span class="bg-blue-100 text-homepro-blue font-bold px-2 py-0.5 rounded-full">${totalRecords} รายการ</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+        ${userStatsList.length === 0 ? '<div class="col-span-full text-center py-10 text-gray-400 text-sm">ยังไม่มีข้อมูลการบันทึกในระบบ</div>' : ''}
+      </div>
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons();
 }
 
-const REL_TYPES = { technicians: { l: 'ลูกค้าช่าง', c: 'bg-blue-100 text-blue-700', lab: r => r.name },
-                    homeowners: { l: 'ลูกค้า', c: 'bg-yellow-100 text-yellow-700', lab: r => r.name },
-                    sites: { l: 'หน้างาน', c: 'bg-green-100 text-green-700', lab: r => r.siteName } };
-const byId = (k, id) => DB[k].find(r => r.id === id);
-const relLink = (k, r) => r ? `<button onclick="relShow('${k}','${esc(r.id)}')" class="text-homepro-blue hover:underline font-semibold text-sm">${esc(REL_TYPES[k].lab(r))}</button>` : '<span class="text-gray-400 text-sm">-</span>';
-function relSearch() {
-  const q = document.getElementById('rel-q').value.trim().toLowerCase(), box = document.getElementById('rel-results');
-  if (!q) { box.innerHTML = ''; return; }
-  const hits = [];
-  Object.keys(REL_TYPES).forEach(k => DB[k].forEach(r => {
-    if (Object.values(r).some(v => String(v).toLowerCase().includes(q)) && hits.length < 30) hits.push([k, r]);
-  }));
-  box.innerHTML = hits.length ? hits.map(([k, r]) => `<button onclick="relShow('${k}','${esc(r.id)}')" class="px-3 py-2 rounded-xl border text-sm hover:bg-gray-50 flex items-center gap-2"><span class="text-xs px-2 py-0.5 rounded-full ${REL_TYPES[k].c}">${REL_TYPES[k].l}</span>${esc(REL_TYPES[k].lab(r))}</button>`).join('')
-    : '<p class="text-sm text-gray-400">ไม่พบข้อมูล</p>';
-}
-function relShow(k, id) {
-  const r = byId(k, id), out = document.getElementById('rel-detail'); if (!r) return;
-  const sec = (t, inner) => `<div class="mt-4"><p class="text-xs font-semibold text-gray-500 uppercase mb-2">${t}</p><div class="flex flex-wrap gap-x-4 gap-y-1">${inner || '<span class="text-gray-400 text-sm">ไม่มี</span>'}</div></div>`;
-  let body = '';
-  if (k === 'technicians') {
-    const hs = homeownersOfTech(id), asg = DB.assignments.filter(a => a.technicianId === id);
-    body = sec('ลูกค้าบ้านของช่างคนนี้ (' + hs.length + ')', hs.map(h => relLink('homeowners', byId('homeowners', h))).join(''))
-         + sec('หน้างานที่เกี่ยวข้อง', [...new Set(asg.map(a => a.siteId).filter(Boolean))].map(x => relLink('sites', byId('sites', x))).join(''));
-  } else if (k === 'homeowners') {
-    const ts = techsOfHomeowner(id);
-    body = sec('ช่างที่สร้างบ้านให้ลูกค้ารายนี้ (' + ts.length + ')', ts.map(t => relLink('technicians', byId('technicians', t))).join(''))
-         + sec('หน้างานของลูกค้า', DB.sites.filter(x => x.homeownerId === id).map(x => relLink('sites', x)).join(''));
-  } else {
-    const ts = [...new Set(DB.assignments.filter(a => a.siteId === id).map(a => a.technicianId))];
-    body = sec('เจ้าของบ้าน', relLink('homeowners', byId('homeowners', r.homeownerId)))
-         + sec('ช่างที่ทำหน้างานนี้ (' + ts.length + ')', ts.map(t => relLink('technicians', byId('technicians', t))).join(''))
-         + sec('ไฟล์เอกสาร', DB.files.filter(f => f.siteId === id).length + ' ไฟล์');
+/* Dashboard Date Filter Helper */
+let dashStartDate = '';
+let dashEndDate = '';
+
+function setDashboardDatePreset(type) {
+  const now = new Date();
+  const startInput = document.getElementById('dash-start-date');
+  const endInput = document.getElementById('dash-end-date');
+  
+  ['all', '30days', 'thisMonth'].forEach(p => {
+    const btn = document.getElementById('preset-' + p);
+    if(btn) {
+      btn.className = (p === type) 
+        ? 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-homepro-blue text-white transition-colors'
+        : 'px-3 py-1.5 text-xs font-semibold rounded-lg border text-gray-600 hover:bg-gray-50 transition-colors';
+    }
+  });
+
+  if (type === 'all') {
+    dashStartDate = '';
+    dashEndDate = '';
+    if(startInput) startInput.value = '';
+    if(endInput) endInput.value = '';
+  } else if (type === '30days') {
+    const start = new Date();
+    start.setDate(now.getDate() - 30);
+    dashStartDate = start.toISOString().slice(0, 10);
+    dashEndDate = now.toISOString().slice(0, 10);
+    if(startInput) startInput.value = dashStartDate;
+    if(endInput) endInput.value = dashEndDate;
+  } else if (type === 'thisMonth') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    dashStartDate = start.toISOString().slice(0, 10);
+    dashEndDate = now.toISOString().slice(0, 10);
+    if(startInput) startInput.value = dashStartDate;
+    if(endInput) endInput.value = dashEndDate;
   }
-  const info = Object.entries(r).filter(([n, v]) => v && !['id', 'createdAt', 'createdBy', 'updatedAt', 'homeownerId'].includes(n)).map(([n, v]) => esc(v)).join(' · ');
-  out.innerHTML = `<div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8"><span class="text-xs px-2 py-0.5 rounded-full ${REL_TYPES[k].c}">${REL_TYPES[k].l}</span>
-    <h3 class="font-bold text-gray-800 text-xl mt-2">${esc(REL_TYPES[k].lab(r))} <span class="text-xs text-gray-400 font-normal">${esc(r.id)}</span></h3>
-    <p class="text-sm text-gray-500 mt-1">${info}</p>${body}</div>`;
+  renderCharts();
 }
 
-/* Charts */
-const CH = {};
-const PALETTE = ['#004B87', '#FFB81C', '#16a34a', '#9333ea', '#ef4444', '#0891b2', '#94a3b8'];
+function onCustomDateChange() {
+  dashStartDate = document.getElementById('dash-start-date').value;
+  dashEndDate = document.getElementById('dash-end-date').value;
+  ['all', '30days', 'thisMonth'].forEach(p => {
+    const btn = document.getElementById('preset-' + p);
+    if(btn) btn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg border text-gray-600 hover:bg-gray-50 transition-colors';
+  });
+  renderCharts();
+}
+
+function filterByDate(list) {
+  if (!dashStartDate && !dashEndDate) return list;
+  return list.filter(r => {
+    const d = (r.createdAt || '').slice(0, 10);
+    if (!d) return false;
+    if (dashStartDate && d < dashStartDate) return false;
+    if (dashEndDate && d > dashEndDate) return false;
+    return true;
+  });
+}
+
+const PALETTE = ['#004B87', '#FFB81C', '#16A34A', '#DC2626', '#7C3AED', '#0891B2', '#EA580C', '#6B7280'];
+const CHART_INST = {};
 function drawChart(id, cfg) {
-  const el = document.getElementById(id);
-  if (!el || !window.Chart) return;
-  if (CH[id]) CH[id].destroy();
-  CH[id] = new Chart(el, Object.assign({ options: {} }, cfg, { options: Object.assign({ responsive: true, maintainAspectRatio: false }, cfg.options || {}) }));
+  const cv = document.getElementById(id);
+  if (!cv || typeof Chart === 'undefined') return;
+  if (CHART_INST[id]) { CHART_INST[id].destroy(); delete CHART_INST[id]; }
+  cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false }, cfg.options || {});
+  CHART_INST[id] = new Chart(cv, cfg);
 }
 function renderCharts() {
   const dash = document.getElementById('view-dashboard');
   if (!dash || dash.classList.contains('hidden')) return;
+
+  const fTech = filterByDate(DB.technicians);
+  const fHome = filterByDate(DB.homeowners);
+  const fSite = filterByDate(DB.sites);
+  const fAsgn = filterByDate(DB.assignments);
+
+  document.getElementById('kpi-tech-count').textContent = fTech.length;
+  document.getElementById('kpi-homeowner-count').textContent = fHome.length;
+  document.getElementById('kpi-site-count').textContent = fSite.length;
+  document.getElementById('kpi-assignment-count').textContent = fAsgn.filter(a => a.status !== 'Completed').length;
+
   const months = [], now = new Date();
   for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }
-  const cnt = months.map(m => ['technicians', 'homeowners', 'sites', 'assignments'].reduce((n, k) => n + DB[k].filter(r => (r.createdAt || '').slice(0, 7) === m).length, 0));
+  const cnt = months.map(m => ['technicians', 'homeowners', 'sites', 'assignments'].reduce((n, k) => n + filterByDate(DB[k]).filter(r => (r.createdAt || '').slice(0, 7) === m).length, 0));
   drawChart('ch-month', { type: 'bar', data: { labels: months, datasets: [{ data: cnt, backgroundColor: '#004B87', borderRadius: 6 }] },
     options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
 
   const sp = {};
-  DB.technicians.forEach(t => { const k = t.specialty || 'ไม่ระบุ'; sp[k] = (sp[k] || 0) + 1; });
+  fTech.forEach(t => { const k = t.specialty || 'ไม่ระบุ'; sp[k] = (sp[k] || 0) + 1; });
   const top = Object.entries(sp).sort((a, b) => b[1] - a[1]).slice(0, 6);
   drawChart('ch-spec', { type: 'bar', data: { labels: top.map(x => x[0]), datasets: [{ data: top.map(x => x[1]), backgroundColor: '#FFB81C', borderRadius: 6 }] },
     options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
 
   const st = {};
-  DB.sites.forEach(x => { const k = x.status || 'ไม่ระบุ'; st[k] = (st[k] || 0) + 1; });
+  fSite.forEach(x => { const k = x.status || 'ไม่ระบุ'; st[k] = (st[k] || 0) + 1; });
   drawChart('ch-site', { type: 'doughnut', data: { labels: Object.keys(st), datasets: [{ data: Object.values(st), backgroundColor: PALETTE }] },
     options: { plugins: { legend: { position: 'bottom' } } } });
 
-  const rank = DB.technicians.map(t => [t.name, homeownersOfTech(t.id).length]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const rank = fTech.map(t => [t.name, homeownersOfTech(t.id).length]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 8);
   drawChart('ch-top', { type: 'bar', data: { labels: rank.map(x => x[0]), datasets: [{ data: rank.map(x => x[1]), backgroundColor: '#004B87', borderRadius: 6 }] },
     options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
   
-  const total = DB.assignments.reduce((n, a) => n + (Number(a.value) || 0), 0), withVal = DB.assignments.filter(a => Number(a.value) > 0).length;
+  const total = fAsgn.reduce((n, a) => n + (Number(a.value) || 0), 0), withVal = fAsgn.filter(a => Number(a.value) > 0).length;
   const js = document.getElementById('job-summary');
-  if (js) js.textContent = withVal ? 'มูลค่างานรวม ฿' + total.toLocaleString('th-TH') + ' จาก ' + withVal + ' งาน' : 'ยังไม่มีข้อมูลมูลค่างาน';
+  if (js) js.textContent = withVal ? 'มูลค่างานรวม ฿' + total.toLocaleString('th-TH') + ' จาก ' + withVal + ' งานในช่วงนี้' : 'ยังไม่มีข้อมูลมูลค่างานในช่วงเวลานี้';
 }
 
 /* Login / Logout */
@@ -840,7 +963,7 @@ let LOGIN_MODE = 'login';
 async function showLogin(msg, kind) {
   saveToken('');
   ME = { role: null };
-  DB = { technicians: [], homeowners: [], sites: [], assignments: [], files: [], users: [] };
+  DB = { technicians: [], homeowners: [], sites: [], assignments: [], files: [], users: [], userNames: [] };
   try { renderAll(); } catch (e) { }
   document.getElementById('login-screen').style.display = 'flex';
   setLoginMsg(msg || '', kind || 'error');
@@ -851,7 +974,7 @@ async function showLogin(msg, kind) {
     body.innerHTML = `<div class="p-4 bg-yellow-50 text-yellow-800 rounded-xl text-xs space-y-2">
       <p class="font-bold">วิธีตั้งค่า:</p>
       <p>1. เปิดไฟล์ <b>index.html</b> ด้วยโปรแกรม Text Editor (เช่น Notepad หรือ VS Code)</p>
-      <p>2. ค้นหาบรรทัด <b>const API_URL_CONST =''</b></p>
+      <p>2. ค้นหาบรรทัด <b>const API_URL_CONST = '...'</b></p>
       <p>3. นำ URL Web App (ที่ลงท้ายด้วย <b>/exec</b>) มาวางแทนที่</p>
     </div>`;
     return;
@@ -906,6 +1029,12 @@ async function startApp(u) {
   document.getElementById('user-display-name').textContent = u.name || u.username;
   document.getElementById('user-display-role').textContent = u.role;
   document.getElementById('user-avatar-initials').textContent = (u.name || u.username || 'HP').slice(0, 2).toUpperCase();
+  
+  const adminSec = document.getElementById('admin-sidebar-section');
+  if (adminSec) {
+    adminSec.style.display = (u.role === 'Super Admin') ? 'block' : 'none';
+  }
+
   document.getElementById('login-screen').style.display = 'none';
   setLoginMsg('');
   switchView('dashboard');
@@ -938,6 +1067,73 @@ function changePw() {
       if (n !== n2) { Swal.showValidationMessage('รหัสผ่านใหม่ไม่ตรงกัน'); return false; }
       try { return await api('changePassword', o, n); } catch (e) { Swal.showValidationMessage(e.message); return false; }
     } }).then(r => { if (r.isConfirmed) toast('success', 'เปลี่ยนรหัสผ่านแล้ว'); });
+}
+
+
+/* Import / Template / Audit / Quick actions */
+const normPhone = s => { const d = String(s == null ? '' : s).replace(/\D/g, ''); return d.length === 9 ? '0' + d : d; };
+const REL_COLS = [['เบอร์โทรช่าง', 'techPhone'], ['เลข Homecard ลูกค้าบ้าน', 'homecard'], ['ประเภทงานที่ช่างทำ', 'role'], ['ปีที่สร้างบ้าน (พ.ศ.)', 'year'], ['มูลค่างาน (บาท)', 'value'], ['สถานะ (Active/Completed)', 'status']];
+function tplCols(key) { return ENT[key].fields.filter(f => ['status', 'owner', 'lastContact'].indexOf(f.k) < 0).map(f => [f.l, f.k]); }
+function downloadSheet(name, cols) {
+  if (typeof XLSX === 'undefined') return Swal.fire('ผิดพลาด', 'โหลดไลบรารี Excel ไม่สำเร็จ', 'error');
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([cols.map(c => c[0])]), 'Template');
+  XLSX.writeFile(wb, name + '.xlsx');
+}
+function downloadTemplate(key) { downloadSheet('แม่แบบ_' + (SHEET_NAMES[key] || key), tplCols(key)); }
+function downloadRelTemplate() { downloadSheet('แม่แบบ_ช่างสร้างบ้านให้ลูกค้า', REL_COLS); }
+function pickExcel(cols, phoneKeys, onRows) {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.xlsx,.xls,.csv';
+  inp.onchange = async () => {
+    const file = inp.files[0]; if (!file) return;
+    try {
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '', raw: false });
+      const map = {}; cols.forEach(c => { map[c[0]] = c[1]; map[c[1]] = c[1]; });
+      const rows = raw.map((r, i) => {
+        const o = { __row: i + 2 };
+        Object.keys(r).forEach(h => { const k = map[String(h).trim()]; if (k) o[k] = String(r[h]).trim(); });
+        phoneKeys.forEach(pk => { if (o[pk]) o[pk] = normPhone(o[pk]); });
+        return o;
+      }).filter(o => Object.keys(o).length > 1);
+      if (!rows.length) return Swal.fire('ไม่พบข้อมูล', 'หัวคอลัมน์ต้องตรงกับไฟล์แม่แบบ', 'warning');
+      await onRows(rows);
+    } catch (e) { Swal.fire('นำเข้าไม่สำเร็จ', cleanErr(e), 'error'); }
+  };
+  inp.click();
+}
+async function showImportResult(res) {
+  const sk = res.skipped || [];
+  await Swal.fire({ icon: res.added ? 'success' : 'warning', title: 'นำเข้าแล้ว ' + res.added + ' รายการ',
+    html: sk.length ? '<div class="text-left text-sm">ข้าม ' + sk.length + ' แถว:<div style="max-height:220px;overflow:auto" class="mt-2">' +
+      sk.slice(0, 50).map(s => '<div>แถว ' + esc(s.row) + ': ' + esc(s.reason) + '</div>').join('') + '</div></div>' : '' });
+  await refresh();
+}
+function importExcel(key) {
+  pickExcel(tplCols(key), ['phone'], async rows => {
+    Swal.fire({ title: 'กำลังนำเข้า...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    await showImportResult(await api('importRecords', key, rows));
+  });
+}
+function importRelations() {
+  pickExcel(REL_COLS, ['techPhone'], async rows => {
+    Swal.fire({ title: 'กำลังนำเข้า...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    await showImportResult(await api('importAssignments', rows));
+  });
+}
+async function loadAudit() {
+  const box = document.getElementById('audit-box'); if (!box) return;
+  box.innerHTML = '<p class="text-sm text-gray-500 p-6">กำลังโหลด...</p>';
+  try {
+    const rows = await api('getAuditLogs', 200);
+    box.innerHTML = '<div class="bg-white rounded-2xl shadow-sm border p-6 overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-xs text-gray-500 border-b"><th class="py-2 pr-4">เวลา</th><th class="pr-4">ผู้ใช้</th><th class="pr-4">การกระทำ</th><th class="pr-4">ตาราง</th><th>รายการ</th></tr></thead><tbody>' +
+      (rows.length ? rows.map(r => `<tr class="border-b border-gray-50"><td class="py-2 pr-4 whitespace-nowrap">${esc(r.timestamp)}</td><td class="pr-4">${esc(r.user)}</td><td class="pr-4">${esc(r.action)}</td><td class="pr-4">${esc(r.entity)}</td><td>${esc(r.recordId)}</td></tr>`).join('') : '<tr><td colspan="5" class="py-6 text-center text-gray-400">ยังไม่มีประวัติ</td></tr>') + '</tbody></table></div>';
+  } catch (e) { box.innerHTML = '<p class="text-sm text-red-600 p-6">' + esc(cleanErr(e)) + '</p>'; }
+}
+async function markContacted(id) {
+  const r = DB.technicians.find(x => x.id === id); if (!r) return;
+  try { await api('updateRecord', 'technicians', id, Object.assign({}, r, { lastContact: new Date().toISOString().slice(0, 10) })); await refresh(); toast('success', 'บันทึกการติดต่อแล้ว'); }
+  catch (e) { Swal.fire('บันทึกไม่สำเร็จ', cleanErr(e), 'error'); }
 }
 
 /* Boot */
