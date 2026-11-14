@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomePro Technician Connect</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'homepro-blue': '#004B87',
+                        'homepro-yellow': '#FFCC00',
+                        'homepro-dark': '#0A192F',
+                        'homepro-light': '#F4F7FA'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+    <!-- SheetJS (xlsx) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        html, body { height: 100%; margin: 0; }
+        body { font-family: 'Prompt', 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-full overflow-hidden bg-gray-50">
+
+<!-- App Shell -->
+<div class="flex h-full w-full overflow-hidden">
+    <!-- Mobile Backdrop -->
+    <div id="sidebar-backdrop" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden transition-opacity" onclick="toggleMobileSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-homepro-dark text-white flex flex-col transition-transform duration-300 -translate-x-full lg:translate-x-0 lg:static lg:flex-shrink-0 h-full shadow-xl">
+        <div class="h-16 flex items-center px-6 bg-homepro-blue border-b border-blue-900 justify-between flex-shrink-0">
+            <div class="flex items-center space-x-3">
+                <div class="bg-homepro-yellow text-homepro-dark font-bold px-2.5 py-1 rounded text-sm shadow">HP</div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight">Technician Connect</h1>
+                    <span class="text-xs text-blue-200">Google Sheets Sync</span>
+                </div>
+            </div>
+            <button onclick="toggleMobileSidebar()" class="lg:hidden text-white hover:text-homepro-yellow focus:outline-none">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1 text-sm">
+            <a href="#" onclick="switchView('dashboard')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all active font-semibold bg-blue-900 shadow-sm" data-view="dashboard">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>ภาพรวม (Dashboard)</span>
+            </a>
+            <a href="#" onclick="switchView('technicians')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="technicians">
+                <i data-lucide="users" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>ลูกค้าช่าง</span>
+            </a>
+            <a href="#" onclick="switchView('homeowners')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="homeowners">
+                <i data-lucide="home" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>ลูกค้าบ้าน (Homecard)</span>
+            </a>
+            <a href="#" onclick="switchView('sites')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="sites">
+                <i data-lucide="map-pin" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>จัดการหน้างาน & ไฟล์</span>
+            </a>
+            <a href="#" onclick="switchView('assignments')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="assignments">
+                <i data-lucide="link" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>ช่างสร้างบ้านให้ลูกค้า</span>
+            </a>
+            <a href="#" onclick="switchView('relationships')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="relationships">
+                <i data-lucide="network" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>ช่าง ↔ ลูกค้าบ้าน</span>
+            </a>
+            <a href="#" onclick="switchView('team-performance')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="team-performance">
+                <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>ผลงานทีม (Manager)</span>
+            </a>
+            <a href="#" onclick="switchView('reports')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="reports">
+                <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>รายงาน & Export Excel</span>
+            </a>
+            <div class="pt-5 pb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</div>
+            <a href="#" onclick="switchView('users')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="users">
+                <i data-lucide="user-cog" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>จัดการผู้ใช้งาน</span>
+            </a>
+            <a href="#" onclick="switchView('audit-logs')" class="nav-link flex items-center px-3.5 py-3 rounded-xl text-gray-200 hover:bg-blue-900 hover:text-white transition-all" data-view="audit-logs">
+                <i data-lucide="shield-alert" class="w-5 h-5 mr-3 text-homepro-yellow flex-shrink-0"></i>
+                <span>Audit Logs</span>
+            </a>
+        </nav>
+
+        <div class="p-4 bg-blue-950 border-t border-blue-900 text-xs text-blue-300 flex justify-between items-center flex-shrink-0">
+            <div>
+                <p class="font-semibold text-white">Google Sheets Sync</p>
+                <p id="system-version-label">v1.0.0 (Hardcoded URL)</p>
+            </div>
+            <button onclick="initDb()" title="Initialize / Sync DB" class="p-2 bg-homepro-blue hover:bg-blue-600 rounded-lg text-white transition-colors shadow">
+                <i data-lucide="database" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-gray-50">
+        <!-- Topbar (Optimized for Mobile Header Clutter & Overflow) -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10 shadow-sm flex-shrink-0 w-full">
+            <div class="flex items-center space-x-3 min-w-0">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden text-gray-600 hover:text-homepro-blue focus:outline-none flex-shrink-0">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div class="min-w-0">
+                    <h2 id="page-title" class="text-base sm:text-lg font-bold text-gray-800 leading-tight truncate">ภาพรวมระบบ (Dashboard)</h2>
+                    <p id="page-breadcrumb" class="text-xs text-gray-500 hidden sm:block truncate">HomePro Technician Connect > Dashboard</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+                <button onclick="switchView('sites')" class="bg-homepro-blue hover:bg-blue-700 text-white text-xs font-semibold px-3 sm:px-4 py-2 rounded-xl transition-colors flex items-center shadow-sm">
+                    <i data-lucide="upload" class="w-4 h-4 sm:mr-1.5"></i> 
+                    <span class="hidden sm:inline">อัปโหลดไฟล์หน้างาน</span>
+                </button>
+                <div onclick="accountMenu()" title="บัญชีของฉัน" class="flex items-center space-x-2 sm:space-x-3 border-l pl-3 sm:pl-4 border-gray-200 cursor-pointer">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-homepro-blue text-white flex items-center font-bold justify-center text-xs sm:text-sm shadow-sm flex-shrink-0" id="user-avatar-initials">HP</div>
+                    <div class="hidden md:block text-left">
+                        <div id="user-display-name" class="text-sm font-semibold text-gray-800 leading-tight">Loading...</div>
+                        <div id="user-display-role" class="text-xs text-gray-500 font-medium mt-0.5">Checking Role...</div>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-xs font-semibold text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-300 rounded-lg sm:rounded-xl px-2.5 py-1.5 sm:px-3 sm:py-2 transition-colors">ออก</button>
+            </div>
+        </header>
+
+        <!-- View Container -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50 w-full" id="main-content-area">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="space-y-6 w-full view-section">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 w-full">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">ลูกค้าช่างทั้งหมด</p>
+                            <h3 id="kpi-tech-count" class="text-3xl font-bold text-gray-800 mt-1">0</h3>
+                            <span class="text-xs text-green-600 font-medium flex items-center mt-1.5"><i data-lucide="trending-up" class="w-3.5 h-3.5 mr-1"></i> เชื่อมต่อ Google Sheets</span>
+                        </div>
+                        <div class="p-3.5 bg-blue-50 text-homepro-blue rounded-2xl shadow-inner"><i data-lucide="users" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">ลูกค้าบ้าน (Homecard)</p>
+                            <h3 id="kpi-homeowner-count" class="text-3xl font-bold text-gray-800 mt-1">0</h3>
+                            <span class="text-xs text-green-600 font-medium flex items-center mt-1.5"><i data-lucide="home" class="w-3.5 h-3.5 mr-1"></i> ป้องกันข้อมูลซ้ำ</span>
+                        </div>
+                        <div class="p-3.5 bg-yellow-50 text-yellow-600 rounded-2xl shadow-inner"><i data-lucide="home" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">หน้างานทั้งหมด</p>
+                            <h3 id="kpi-site-count" class="text-3xl font-bold text-gray-800 mt-1">0</h3>
+                            <span class="text-xs text-blue-600 font-medium flex items-center mt-1.5"><i data-lucide="map-pin" class="w-3.5 h-3.5 mr-1"></i> รองรับรูปภาพ/เอกสาร</span>
+                        </div>
+                        <div class="p-3.5 bg-green-50 text-green-600 rounded-2xl shadow-inner"><i data-lucide="map-pin" class="w-6 h-6"></i></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">ช่าง–ลูกค้าบ้าน ที่กำลังทำงาน</p>
+                            <h3 id="kpi-assignment-count" class="text-3xl font-bold text-gray-800 mt-1">0</h3>
+                            <span class="text-xs text-purple-600 font-medium flex items-center mt-1.5"><i data-lucide="link" class="w-3.5 h-3.5 mr-1"></i> เชื่อมโยงสมบูรณ์</span>
+                        </div>
+                        <div class="p-3.5 bg-purple-50 text-purple-600 rounded-2xl shadow-inner"><i data-lucide="link" class="w-6 h-6"></i></div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-homepro-blue to-homepro-dark rounded-2xl p-8 text-white shadow-lg flex flex-col lg:flex-row justify-between items-center w-full">
+                    <div>
+                        <span class="bg-homepro-yellow text-homepro-dark text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Google Sheets Mode</span>
+                        <h2 class="text-2xl lg:text-3xl font-bold mt-2">ระบบซิงค์ข้อมูลกับ Google Sheets และ Google Drive</h2>
+                        <p class="text-blue-100 text-sm mt-1.5 max-w-2xl">เรียกใช้งานไฟล์จากเครื่องของคุณ แต่บันทึกและดึงข้อมูลจริงจาก Google Sheets ได้อย่างปลอดภัย</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 mt-4 lg:mt-0">
+                        <button onclick="switchView('sites')" class="bg-homepro-yellow text-homepro-dark hover:bg-yellow-400 font-bold px-5 py-3 rounded-xl text-sm transition-all shadow-md flex items-center">
+                            <i data-lucide="folder-open" class="w-4 h-4 mr-2"></i> จัดการไฟล์หน้างาน
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 w-full">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
+                        <h4 class="font-bold text-gray-800 text-sm mb-3">รายการที่บันทึก 6 เดือนล่าสุด</h4>
+                        <div class="h-56"><canvas id="ch-month"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
+                        <h4 class="font-bold text-gray-800 text-sm mb-3">ลูกค้าช่างแยกตามประเภทงาน</h4>
+                        <div class="h-56"><canvas id="ch-spec"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
+                        <h4 class="font-bold text-gray-800 text-sm mb-3">สถานะหน้างาน</h4>
+                        <div class="h-56"><canvas id="ch-site"></canvas></div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200/80">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                        <h4 class="font-bold text-gray-800 text-sm">ลูกค้าช่างที่มีลูกค้าบ้านมากที่สุด (Top 8)</h4>
+                        <span id="job-summary" class="text-xs text-gray-500"></span>
+                    </div>
+                    <div class="h-56"><canvas id="ch-top"></canvas></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full"><div id="idle-box"></div><div id="notech-box"></div></div>
+                <div id="followup-box"></div>
+            </div>
+
+            <!-- Placeholders -->
+            <div id="view-technicians" class="view-section hidden w-full"><div id="crud-technicians"></div></div>
+            <div id="view-homeowners" class="view-section hidden w-full"><div id="crud-homeowners"></div></div>
+
+            <!-- Customer Sites & File Management -->
+            <div id="view-sites" class="space-y-6 w-full view-section hidden">
+                <div id="crud-sites"></div>
+                <div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-5 border-b border-gray-100 gap-4">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-xl flex items-center">
+                                <i data-lucide="folder-open" class="w-6 h-6 text-homepro-blue mr-2.5"></i> ไฟล์เอกสารหน้างาน (Google Drive)
+                            </h3>
+                            <p class="text-xs text-gray-500 mt-1">ไฟล์เก็บใน Drive แยกโฟลเดอร์ตามหน้างาน และบันทึกรายการลง Google Sheet</p>
+                        </div>
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <select id="file-site-select" onchange="renderSiteFiles()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm"></select>
+                            <button id="btn-upload" onclick="openUploadModal()" class="bg-homepro-blue hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow-sm flex items-center">
+                                <i data-lucide="upload-cloud" class="w-4 h-4 mr-2"></i> อัปโหลดไฟล์ใหม่
+                            </button>
+                        </div>
+                    </div>
+                    <div id="site-files-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6"></div>
+                </div>
+            </div>
+
+            <div id="view-assignments" class="view-section hidden w-full"><div id="crud-assignments"></div></div>
+            <div id="view-relationships" class="view-section hidden w-full">
+                <div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8">
+                    <h3 class="font-bold text-gray-800 text-xl">ช่าง ↔ ลูกค้าบ้าน</h3>
+                    <p class="text-xs text-gray-500 mt-1">ค้นหาลูกค้าช่าง เพื่อดูว่ามีลูกค้าบ้านเป็นใคร หรือค้นหาลูกค้าบ้าน เพื่อดูว่าช่างคนไหนสร้างบ้านให้</p>
+                    <input id="rel-q" oninput="relSearch()" placeholder="พิมพ์ชื่อ เบอร์โทร เลข Homecard หรือชื่อหน้างาน..." class="w-full mt-4 border border-gray-300 rounded-xl px-4 py-3 text-sm">
+                    <div id="rel-results" class="mt-3 flex flex-wrap gap-2"></div>
+                </div>
+                <div id="rel-detail" class="mt-6"></div>
+            </div>
+            <div id="view-team-performance" class="view-section hidden w-full"><div id="team-box"></div></div>
+            <div id="view-reports" class="view-section hidden w-full">
+                <div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8">
+                    <h3 class="font-bold text-gray-800 text-xl">รายงาน & Export Excel</h3>
+                    <p class="text-xs text-gray-500 mt-1">ดาวน์โหลดข้อมูลล่าสุดจาก Google Sheet เป็นไฟล์ .xlsx</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                        <button onclick="exportExcel('all')" class="p-5 rounded-2xl bg-homepro-blue text-white text-left shadow hover:bg-blue-700">
+                            <div class="font-bold">ส่งออกทั้งหมด</div><div class="text-xs text-blue-100 mt-1">ทุกตารางในไฟล์เดียว (หลายชีต)</div>
+                        </button>
+                        <button onclick="exportExcel('technicians')" class="p-5 rounded-2xl border text-left hover:bg-gray-50"><div class="font-bold text-gray-800">ลูกค้าช่าง</div><div class="text-xs text-gray-500 mt-1" id="rep-technicians"></div></button>
+                        <button onclick="exportExcel('homeowners')" class="p-5 rounded-2xl border text-left hover:bg-gray-50"><div class="font-bold text-gray-800">ลูกค้าบ้าน (Homecard)</div><div class="text-xs text-gray-500 mt-1" id="rep-homeowners"></div></button>
+                        <button onclick="exportExcel('sites')" class="p-5 rounded-2xl border text-left hover:bg-gray-50"><div class="font-bold text-gray-800">หน้างาน</div><div class="text-xs text-gray-500 mt-1" id="rep-sites"></div></button>
+                        <button onclick="exportExcel('assignments')" class="p-5 rounded-2xl border text-left hover:bg-gray-50"><div class="font-bold text-gray-800">ช่างสร้างบ้านให้ลูกค้า</div><div class="text-xs text-gray-500 mt-1" id="rep-assignments"></div></button>
+                        <button onclick="exportExcel('files')" class="p-5 rounded-2xl border text-left hover:bg-gray-50"><div class="font-bold text-gray-800">รายการไฟล์หน้างาน</div><div class="text-xs text-gray-500 mt-1" id="rep-files"></div></button>
+                    </div>
+                </div>
+            </div>
+            <div id="view-users" class="view-section hidden w-full"><div id="crud-users"></div></div>
+            <div id="view-audit-logs" class="view-section hidden w-full"><div id="audit-box"></div></div>
+        </main>
+    </div>
+</div>
+
+<!-- Login screen -->
+<div id="login-screen" style="position:fixed;inset:0;z-index:1000;display:flex" class="items-center justify-center p-4 overflow-y-auto bg-gradient-to-br from-blue-950 via-blue-900 to-homepro-blue">
+  <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
+    <div class="flex flex-col items-center text-center">
+      <div class="w-14 h-14 rounded-2xl bg-homepro-blue text-white flex items-center justify-center font-bold text-xl shadow">HP</div>
+      <h1 class="mt-4 text-xl font-bold text-gray-800">HomePro Technician Connect</h1>
+      <p class="text-sm text-gray-500 mt-1">ระบบบันทึกลูกค้าช่างและลูกค้าบ้าน</p>
+    </div>
+    <div id="login-msg" class="hidden mt-5 text-sm rounded-xl px-4 py-3"></div>
+    <div id="login-body" class="mt-6"><p class="text-center text-sm text-gray-400">กำลังตรวจสอบระบบ...</p></div>
+    <p class="text-center text-xs text-gray-400 mt-6">เฉพาะผู้ใช้งานที่ได้รับอนุญาตเท่านั้น</p>
+  </div>
+</div>
+
+<script>
+/* ========================================================================== */
+/* 🛠️ กำหนด URL Web App ของ Google Apps Script ที่นี่ (แทนการกรอกหน้าจอ)       */
+/* ========================================================================== */
+const API_URL_CONST = 'https://script.google.com/macros/s/AKfycbxEZmmPn37mj_mfbCoHfrbsusGUDpE1ttGveYXg6PZwOthz58Ivc3gJoJ6NDh-QJwbD/exec';
+
+/* ============ Config & Entities ============ */
+const ENT = {
+  technicians: { title: 'ลูกค้าช่าง', fields: [
+    { k: 'name', l: 'ชื่อ-สกุล', req: 1 },
+    { k: 'phone', l: 'เบอร์โทร', req: 1 },
+    { k: 'homecard', l: 'เลข Homecard / รหัสลูกค้า' },
+    { k: 'shopName', l: 'ชื่อร้าน / ทีมช่าง' },
+    { k: 'specialty', l: 'ประเภทงานช่าง', sugg: ['ไฟฟ้า', 'ประปา', 'กระเบื้อง', 'ปูน/ก่อสร้าง', 'สี', 'หลังคา/ฝ้า', 'ต่อเติม/รับเหมา', 'เครื่องปรับอากาศ'] },
+    { k: 'area', l: 'พื้นที่ให้บริการ' },
+    { k: 'lineId', l: 'LINE ID' },
+    { k: 'owner', l: 'ผู้ดูแลลูกค้า (Sales)', def: 'me' },
+    { k: 'lastContact', l: 'ติดต่อล่าสุด', type: 'date' },
+    { k: 'note', l: 'หมายเหตุ', type: 'textarea', noTable: true },
+    { k: 'status', l: 'สถานะ', type: 'select', opts: ['Active', 'Inactive'] } ] },
+  homeowners: { title: 'ลูกค้าบ้าน (Homecard)', fields: [
+    { k: 'homecard', l: 'เลข Homecard', req: 1 },
+    { k: 'name', l: 'ชื่อ-สกุล', req: 1 },
+    { k: 'phone', l: 'เบอร์โทร' },
+    { k: 'address', l: 'ที่อยู่' } ] },
+  sites: { title: 'หน้างาน', fields: [
+    { k: 'siteName', l: 'ชื่อหน้างาน', req: 1 },
+    { k: 'homeownerId', l: 'ลูกค้าบ้าน', type: 'ref', ref: 'homeowners' },
+    { k: 'address', l: 'ที่อยู่หน้างาน' },
+    { k: 'status', l: 'สถานะ', type: 'select', opts: ['กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'] } ] },
+  assignments: { title: 'ช่างสร้างบ้านให้ลูกค้า', fields: [
+    { k: 'technicianId', l: 'ลูกค้าช่าง', req: 1, type: 'ref', ref: 'technicians' },
+    { k: 'homeownerId', l: 'ลูกค้าบ้าน', req: 1, type: 'ref', ref: 'homeowners' },
+    { k: 'siteId', l: 'หน้างาน (ถ้ามี)', type: 'ref', ref: 'sites' },
+    { k: 'role', l: 'ประเภทงานที่ช่างทำ' },
+    { k: 'year', l: 'ปีที่สร้างบ้าน (พ.ศ.)' },
+    { k: 'value', l: 'มูลค่างานโดยประมาณ (บาท)' },
+    { k: 'note', l: 'หมายเหตุ', type: 'textarea', noTable: true },
+    { k: 'status', l: 'สถานะ', type: 'select', opts: ['Active', 'Completed'] } ] }
+};
+ENT.technicians.importable = ENT.homeowners.importable = true;
+ENT.technicians.extra = [{ l: 'ลูกค้าบ้านของช่าง', k: 'homeowners', ids: r => homeownersOfTech(r.id) }];
+ENT.homeowners.extra = [{ l: 'ช่างที่สร้างบ้านให้', k: 'technicians', ids: r => techsOfHomeowner(r.id) }];
+ENT.users = { title: 'ผู้ใช้งาน', fields: [
+  { k: 'username', l: 'ชื่อผู้ใช้ (ใช้ล็อกอิน)', req: 1 },
+  { k: 'name', l: 'ชื่อที่แสดง' },
+  { k: 'email', l: 'อีเมล (ถ้ามี)' },
+  { k: 'role', l: 'สิทธิ์', type: 'select', opts: ['Viewer', 'Sales Staff', 'Manager', 'Super Admin'] },
+  { k: 'status', l: 'สถานะ', type: 'select', opts: ['Active', 'Inactive'] },
+  { k: 'password', l: 'รหัสผ่าน (อย่างน้อย 8 ตัว)', type: 'password', reqCreate: 1, noTable: true, hint: 'เว้นว่างถ้าไม่ต้องการเปลี่ยน' } ] };
+
+let ME = { role: null };
+const canDo = (key, action) => key === 'users' ? ME.role === 'Super Admin'
+  : action === 'delete' ? ['Super Admin', 'Manager'].includes(ME.role)
+  : ['Super Admin', 'Manager', 'Sales Staff'].includes(ME.role);
+const REF_LABEL = { technicians: 'name', homeowners: 'name', sites: 'siteName' };
+const VIEW_TITLES = {
+  dashboard: 'ภาพรวมระบบ (Dashboard)', technicians: 'ลูกค้าช่าง', homeowners: 'ลูกค้าบ้าน (Homecard)',
+  sites: 'จัดการหน้างาน & ไฟล์', assignments: 'ช่างสร้างบ้านให้ลูกค้า', relationships: 'ช่าง ↔ ลูกค้าบ้าน',
+  'team-performance': 'ผลงานทีม (Manager)', reports: 'รายงาน & Export Excel', users: 'จัดการผู้ใช้งาน', 'audit-logs': 'Audit Logs'
+};
+let DB = { technicians: [], homeowners: [], sites: [], assignments: [], files: [], users: [] };
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let TOKEN = '';
+try { TOKEN = sessionStorage.getItem('hp_token') || ''; } catch (e) { }
+function saveToken(t) { TOKEN = t || ''; try { t ? sessionStorage.setItem('hp_token', t) : sessionStorage.removeItem('hp_token'); } catch (e) { } }
+const cleanErr = e => String((e && e.message) || e || '').replace(/^(Error|Exception):\s*/, '');
+
+function apiUrl() {
+  return API_URL_CONST;
+}
+const hasGas = () => !!(window.google && google.script && google.script.run);
+
+async function fetchCall(name, args) {
+  const url = apiUrl();
+  if (!url || url.includes('YOUR_SCRIPT_ID')) throw new Error('กรุณาใส่ URL Web App ของ Apps Script ที่ตัวแปร API_URL_CONST ในไฟล์ index.html ก่อนใช้งาน');
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 90000);
+  try {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: name, args }), signal: ctl.signal });
+    const text = await res.text();
+    let j;
+    try { j = JSON.parse(text); }
+    catch (e) { throw new Error('เซิร์ฟเวอร์ตอบกลับไม่ถูกต้อง — ตรวจสอบว่า Deploy แบบ Who has access: Anyone และใช้ URL ที่ลงท้ายด้วย /exec'); }
+    if (!j.ok) throw new Error(cleanErr(j.error));
+    return j.data;
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('เซิร์ฟเวอร์ตอบช้าเกินไป กรุณาลองใหม่อีกครั้ง');
+    if (e instanceof TypeError) throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตและ URL Web App');
+    throw e;
+  } finally { clearTimeout(timer); }
+}
+function serverCall(name, args) {
+  if (hasGas()) return new Promise((resolve, reject) =>
+    google.script.run.withSuccessHandler(resolve).withFailureHandler(e => reject(new Error(cleanErr(e))))[name](...args));
+  return fetchCall(name, args);
+}
+const rawCall = (fn, ...args) => serverCall(fn, args);
+function api(fn, ...args) {
+  return serverCall('api', [TOKEN, fn, args]).catch(e => {
+    if (String(e.message).includes('SESSION_EXPIRED')) {
+      showLogin('หมดเวลาการใช้งาน กรุณาเข้าสู่ระบบอีกครั้ง', 'info');
+      throw new Error('หมดเวลาการใช้งาน');
+    }
+    throw e;
+  });
+}
+function toast(icon, title) {
+  Swal.fire({ toast: true, position: 'top-end', icon, title, showConfirmButton: false, timer: 2500 });
+}
+
+/* Navigation & Render Functions */
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('-translate-x-full');
+  document.getElementById('sidebar-backdrop').classList.toggle('hidden');
+}
+function switchView(name) {
+    if (window.event) {
+        if (window.event.preventDefault) window.event.preventDefault();
+        if (window.event.stopPropagation) window.event.stopPropagation();
+    }
+    
+    document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+    const el = document.getElementById('view-' + name);
+    if (el) el.classList.remove('hidden');
+    
+    document.querySelectorAll('.nav-link').forEach(a => {
+        const on = a.dataset.view === name;
+        a.classList.toggle('bg-blue-900', on);
+        a.classList.toggle('font-semibold', on);
+    });
+    
+    document.getElementById('page-title').textContent = VIEW_TITLES[name] || name;
+    document.getElementById('page-breadcrumb').textContent = 'HomePro Technician Connect > ' + (VIEW_TITLES[name] || name);
+    
+    // บังคับปิด Sidebar ทันทีบนมือถือ
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.add('-translate-x-full');
+    }
+    if (backdrop && !backdrop.classList.contains('hidden')) {
+        backdrop.classList.add('hidden');
+    }
+    
+    document.getElementById('main-content-area').scrollTop = 0;
+    if (name === 'audit-logs') loadAudit();
+    if (name === 'dashboard') renderCharts();
+}
+function cellValue(f, row) {
+  const v = row[f.k] || (f.k === 'homeownerId' ? homeownerIdOf(row) : '');
+  if (f.type === 'ref') {
+    const hit = DB[f.ref].find(r => r.id === v);
+    return hit ? hit[REF_LABEL[f.ref]] : (v || '-');
+  }
+  if (f.k === 'value' && v && !isNaN(Number(v))) return Number(v).toLocaleString('th-TH');
+  return v || '-';
+}
+const homeownerIdOf = a => a.homeownerId || ((DB.sites.find(x => x.id === a.siteId) || {}).homeownerId) || '';
+const homeownersOfTech = id => [...new Set(DB.assignments.filter(a => a.technicianId === id).map(homeownerIdOf).filter(Boolean))];
+const techsOfHomeowner = id => [...new Set(DB.assignments.filter(a => homeownerIdOf(a) === id).map(a => a.technicianId))];
+function goRel(k, id) { switchView('relationships'); relShow(k, id); }
+function chips(k, ids) {
+  if (!ids.length) return '<span class="text-gray-400 text-xs">ยังไม่มี</span>';
+  const label = i => { const r = (DB[k] || []).find(x => x.id === i); return r ? REL_TYPES[k].lab(r) : ''; };
+  return ids.slice(0, 3).map(i => label(i) ? `<button onclick="goRel('${k}','${esc(i)}')" class="text-homepro-blue hover:underline text-xs font-semibold mr-2">${esc(label(i))}</button>` : '').join('')
+    + (ids.length > 3 ? `<span class="text-xs text-gray-400">+${ids.length - 3}</span>` : '');
+}
+const extraText = (key, r) => (ENT[key].extra || []).map(e => e.ids(r).map(i => { const x = DB[e.k].find(y => y.id === i); return x ? REL_TYPES[e.k].lab(x) : ''; }).join(', ')).join(' ');
+
+const PAGE_SIZE = 15;
+const TBL = {};
+const T = key => TBL[key] || (TBL[key] = { q: '', status: '', sort: '', dir: 1, page: 1 });
+const sortVal = (key, r) => { const t = T(key); if (t.sort === 'id') return r.id; const f = ENT[key].fields.find(x => x.k === t.sort); return f ? cellValue(f, r) : ''; };
+function filteredRows(key) {
+  const c = ENT[key], t = T(key), q = t.q.trim().toLowerCase();
+  let rows = DB[key].slice();
+  if (t.status) rows = rows.filter(r => r.status === t.status);
+  if (q) rows = rows.filter(r => (r.id + ' ' + c.fields.map(f => cellValue(f, r)).join(' ') + ' ' + extraText(key, r)).toLowerCase().includes(q));
+  if (t.sort) rows.sort((x, y) => String(sortVal(key, x)).localeCompare(String(sortVal(key, y)), 'th', { numeric: true }) * t.dir);
+  return rows;
+}
+function setQ(key, v) { const t = T(key); t.q = v; t.page = 1; renderTable(key); }
+function setStatus(key, v) { const t = T(key); t.status = v; t.page = 1; renderTable(key); }
+function sortBy(key, k) { const t = T(key); if (t.sort === k) t.dir = -t.dir; else { t.sort = k; t.dir = 1; } renderTable(key); }
+function goPage(key, d) { T(key).page += d; renderTable(key); }
+
+function renderEntity(key) {
+  const box = document.getElementById('crud-' + key);
+  if (!box) return;
+  const c = ENT[key], t = T(key);
+  const sf = c.fields.find(f => f.k === 'status' && f.type === 'select');
+  const importBtns = (c.importable || key === 'assignments') && canDo(key, 'create') ? `
+        <button onclick="${key === 'assignments' ? 'downloadRelTemplate()' : `downloadTemplate('${key}')`}" class="border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-4 py-2.5 rounded-xl text-sm">ดาวน์โหลดแม่แบบ</button>
+        <button onclick="${key === 'assignments' ? 'importRelations()' : `importExcel('${key}')`}" class="border border-homepro-blue text-homepro-blue hover:bg-blue-50 font-semibold px-4 py-2.5 rounded-xl text-sm">นำเข้า Excel</button>` : '';
+  box.innerHTML = `
+  <div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8">
+    <div class="flex flex-col xl:flex-row justify-between xl:items-center gap-3 pb-5 border-b border-gray-100">
+      <div>
+        <h3 class="font-bold text-gray-800 text-xl">${esc(c.title)}</h3>
+        <p class="text-xs text-gray-500 mt-1" id="cnt-${key}"></p>
+      </div>
+      <div class="flex flex-wrap gap-2 items-center">
+        <input value="${esc(t.q)}" oninput="setQ('${key}', this.value)" placeholder="ค้นหา..." class="border border-gray-300 rounded-xl px-3 py-2.5 text-sm w-44">
+        ${sf ? `<select onchange="setStatus('${key}', this.value)" class="border border-gray-300 rounded-xl px-3 py-2.5 text-sm"><option value="">ทุกสถานะ</option>${sf.opts.map(o => `<option ${o === t.status ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>` : ''}
+        ${importBtns}
+        ${canDo(key, 'create') ? `<button onclick="openForm('${key}')" class="bg-homepro-blue hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow-sm">+ เพิ่ม${esc(c.title)}</button>` : ''}
+      </div>
+    </div>
+    <div id="tbl-${key}" class="mt-4"></div>
+  </div>`;
+  renderTable(key);
+}
+function renderTable(key) {
+  const c = ENT[key], t = T(key), box = document.getElementById('tbl-' + key);
+  const cols = c.fields.filter(f => !f.noTable);
+  if (!box) return;
+  const rows = filteredRows(key), pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  t.page = Math.min(Math.max(1, t.page), pages);
+  const view = rows.slice((t.page - 1) * PAGE_SIZE, t.page * PAGE_SIZE);
+  const th = (k, l) => `<th onclick="sortBy('${key}','${k}')" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap cursor-pointer select-none hover:text-homepro-blue">${esc(l)}${t.sort === k ? (t.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`;
+  const body = view.length ? view.map(r => `
+    <tr class="border-t border-gray-100 hover:bg-gray-50">
+      <td class="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">${esc(r.id)}</td>
+      ${cols.map(f => `<td class="px-4 py-3 text-sm text-gray-700">${esc(cellValue(f, r))}</td>`).join('')}
+      ${(c.extra || []).map(e => `<td class="px-4 py-3">${chips(e.k, e.ids(r))}</td>`).join('')}
+      <td class="px-4 py-3 text-right whitespace-nowrap">
+        ${key === 'technicians' && canDo(key, 'update') ? `<button onclick="markContacted('${esc(r.id)}')" class="text-green-600 text-xs font-semibold hover:underline mr-3">ติดต่อแล้ว</button>` : ''}
+        ${canDo(key, 'update') ? `<button onclick="openForm('${key}','${esc(r.id)}')" class="text-homepro-blue text-xs font-semibold hover:underline mr-3">แก้ไข</button>` : ''}
+        ${canDo(key, 'delete') ? `<button onclick="removeRow('${key}','${esc(r.id)}')" class="text-red-500 text-xs font-semibold hover:underline">ลบ</button>` : ''}
+      </td></tr>`).join('')
+    : `<tr><td colspan="${cols.length + 2 + (c.extra || []).length}" class="px-4 py-10 text-center text-sm text-gray-400">${DB[key].length ? 'ไม่พบข้อมูลที่ตรงกับการค้นหา' : 'ยังไม่มีข้อมูล'}</td></tr>`;
+  box.innerHTML = `<div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-gray-50"><tr>${th('id', 'ID')}${cols.map(f => th(f.k, f.l)).join('')}${(c.extra || []).map(e => `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap">${esc(e.l)}</th>`).join('')}<th></th></tr></thead><tbody>${body}</tbody></table></div>
+    <div class="flex justify-between items-center mt-4 text-xs text-gray-500">
+      <span>หน้า ${t.page} / ${pages}</span>
+      <span><button ${t.page <= 1 ? 'disabled' : ''} onclick="goPage('${key}',-1)" class="px-3 py-1.5 border rounded-lg mr-2 ${t.page <= 1 ? 'opacity-40' : 'hover:bg-gray-50'}">ก่อนหน้า</button><button ${t.page >= pages ? 'disabled' : ''} onclick="goPage('${key}',1)" class="px-3 py-1.5 border rounded-lg ${t.page >= pages ? 'opacity-40' : 'hover:bg-gray-50'}">ถัดไป</button></span>
+    </div>`;
+  const cnt = document.getElementById('cnt-' + key);
+  if (cnt) cnt.textContent = (rows.length === DB[key].length ? DB[key].length + ' รายการ' : 'พบ ' + rows.length + ' จาก ' + DB[key].length + ' รายการ') + ' · ซิงค์กับ Google Sheet';
+}
+
+function renderAll() {
+  Object.keys(ENT).forEach(renderEntity);
+  renderSiteFiles();
+  renderReportCounts();
+  renderTeam();
+  renderCharts();
+  document.getElementById('kpi-tech-count').textContent = DB.technicians.length;
+  document.getElementById('kpi-homeowner-count').textContent = DB.homeowners.length;
+  document.getElementById('kpi-site-count').textContent = DB.sites.length;
+  document.getElementById('kpi-assignment-count').textContent = DB.assignments.filter(a => a.status !== 'Completed').length;
+}
+
+async function refresh() {
+  DB = await api('getAllData');
+  DB.users = ME.role === 'Super Admin' ? await api('getUsers') : [];
+  renderAll();
+}
+
+function openForm(key, id) {
+  const c = ENT[key];
+  const cur = id ? DB[key].find(r => r.id === id) : {};
+  if (key === 'assignments' && id && !cur.homeownerId) cur.homeownerId = homeownerIdOf(cur);
+  const input = f => {
+    const v = (cur[f.k] != null && cur[f.k] !== '') ? cur[f.k] : (!id && f.def === 'me' ? (ME.name || '') : '');
+    const cls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm';
+    if (f.type === 'select')
+      return `<select id="f-${f.k}" class="${cls}">${f.opts.map(o => `<option ${o === (v || f.opts[0]) ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+    if (f.type === 'ref')
+      return `<select id="f-${f.k}" class="${cls}"><option value="">-- เลือก --</option>${DB[f.ref].map(r => `<option value="${esc(r.id)}" ${r.id === v ? 'selected' : ''}>${esc(r[REF_LABEL[f.ref]])} (${esc(r.id)})</option>`).join('')}</select>`;
+    if (f.type === 'textarea') return `<textarea id="f-${f.k}" rows="3" class="${cls}">${esc(v)}</textarea>`;
+    const dl = f.sugg ? `<datalist id="dl-${f.k}">${f.sugg.map(o => `<option value="${esc(o)}">`).join('')}</datalist>` : '';
+    return `<input id="f-${f.k}" ${f.type === 'date' ? 'type="date"' : f.type === 'password' ? 'type="password" autocomplete="new-password"' : ''} ${f.hint && id ? `placeholder="${esc(f.hint)}"` : ''} ${f.sugg ? `list="dl-${f.k}"` : ''} class="${cls}" value="${esc(v)}">${dl}`;
+  };
+  const html = `<div class="text-left space-y-3">${c.fields.map(f =>
+    `<label class="block text-xs font-semibold text-gray-600">${esc(f.l)}${(f.req || (f.reqCreate && !id)) ? ' <span class="text-red-500">*</span>' : ''}${input(f)}</label>`).join('')}</div>`;
+  Swal.fire({
+    title: (id ? 'แก้ไข' : 'เพิ่ม') + c.title, html, showCancelButton: true,
+    confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#004B87', showLoaderOnConfirm: true,
+    didOpen: () => {
+      if (key !== 'assignments') return;
+      const ho = document.getElementById('f-homeownerId'), st = document.getElementById('f-siteId');
+      const fill = () => {
+        const keep = st.value;
+        const list = DB.sites.filter(x => !ho.value || x.homeownerId === ho.value);
+        st.innerHTML = '<option value="">-- ไม่ระบุ --</option>' + list.map(x => `<option value="${esc(x.id)}" ${x.id === keep ? 'selected' : ''}>${esc(x.siteName)} (${esc(x.id)})</option>`).join('');
+      };
+      ho.addEventListener('change', fill); fill();
+    },
+    preConfirm: async () => {
+      const d = {};
+      for (const f of c.fields) {
+        d[f.k] = document.getElementById('f-' + f.k).value.trim();
+        if ((f.req || (f.reqCreate && !id)) && !d[f.k]) { Swal.showValidationMessage('กรุณากรอก ' + f.l); return false; }
+      }
+      try { return id ? await api('updateRecord', key, id, d) : await api('saveRecord', key, d); }
+      catch (e) { Swal.showValidationMessage(e.message || String(e)); return false; }
+    }
+  }).then(async r => {
+    if (r.isConfirmed) { await refresh(); toast('success', 'บันทึกลง Google Sheet แล้ว'); }
+  });
+}
+
+async function removeRow(key, id) {
+  const r = await Swal.fire({ title: 'ลบรายการ ' + id + '?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#dc2626' });
+  if (!r.isConfirmed) return;
+  try { await api('deleteRecord', key, id); await refresh(); toast('success', 'ลบแล้ว'); }
+  catch (e) { Swal.fire('ลบไม่สำเร็จ', e.message || String(e), 'error'); }
+}
+
+async function initDb() {
+  try {
+    const url = await api('initDb');
+    await refresh();
+    Swal.fire({ icon: 'success', title: 'เชื่อมต่อ Google Sheet แล้ว', html: `<a href="${esc(url)}" target="_blank" class="text-blue-600 underline">เปิด Google Sheet</a>` });
+  } catch (e) { Swal.fire('เชื่อมต่อไม่สำเร็จ', e.message || String(e), 'error'); }
+}
+
+/* Site files (Google Drive) */
+function fmtSize(n) { n = Number(n) || 0; return n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+function renderSiteFiles() {
+  const sel = document.getElementById('file-site-select'), box = document.getElementById('site-files-container');
+  if (!sel || !box) return;
+  const keep = sel.value;
+  sel.innerHTML = DB.sites.length ? DB.sites.map(x => `<option value="${esc(x.id)}">${esc(x.siteName)} (${esc(x.id)})</option>`).join('') : '<option value="">ยังไม่มีหน้างาน</option>';
+  if (keep && DB.sites.some(x => x.id === keep)) sel.value = keep;
+  const list = DB.files.filter(f => f.siteId === sel.value);
+  box.innerHTML = list.length ? list.map(f => `
+    <div class="p-4 bg-gray-50 border rounded-xl flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <p class="text-sm font-semibold text-gray-800 truncate" title="${esc(f.fileName)}">${esc(f.fileName)}</p>
+        <span class="text-xs text-gray-500">${fmtSize(f.size)} · ${esc(f.createdAt)}</span>
+      </div>
+      <div class="flex-shrink-0 whitespace-nowrap">
+        <a href="${esc(f.url)}" target="_blank" rel="noopener" class="text-homepro-blue hover:underline text-xs font-semibold mr-3">ดูไฟล์</a>
+        ${canDo('files', 'delete') ? `<button onclick="removeFile('${esc(f.id)}')" class="text-red-500 text-xs font-semibold hover:underline">ลบ</button>` : ''}
+      </div>
+    </div>`).join('') : '<p class="text-sm text-gray-400 col-span-full py-6 text-center">ยังไม่มีไฟล์ในหน้างานนี้</p>';
+}
+
+function openUploadModal(siteId) {
+  if (!DB.sites.length) { Swal.fire('ยังไม่มีหน้างาน', 'กรุณาเพิ่มหน้างานก่อนอัปโหลดไฟล์', 'info'); return; }
+  const cur = siteId || document.getElementById('file-site-select').value || DB.sites[0].id;
+  const cls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm';
+  Swal.fire({
+    title: 'อัปโหลดไฟล์หน้างาน',
+    html: `<div class="text-left space-y-3">
+      <label class="block text-xs font-semibold text-gray-600">หน้างาน<select id="up-site" class="${cls}">${DB.sites.map(x => `<option value="${esc(x.id)}" ${x.id === cur ? 'selected' : ''}>${esc(x.siteName)} (${esc(x.id)})</option>`).join('')}</select></label>
+      <label class="block text-xs font-semibold text-gray-600">ไฟล์ (ไม่เกิน 10 MB)<input id="up-file" type="file" class="${cls}"></label></div>`,
+    showCancelButton: true, confirmButtonText: 'อัปโหลด', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#004B87', showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const file = document.getElementById('up-file').files[0];
+      if (!file) { Swal.showValidationMessage('กรุณาเลือกไฟล์'); return false; }
+      if (file.size > 10 * 1024 * 1024) { Swal.showValidationMessage('ไฟล์ใหญ่เกิน 10 MB'); return false; }
+      try {
+        const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(new Error('อ่านไฟล์ไม่สำเร็จ')); r.readAsDataURL(file); });
+        return await api('uploadFile', document.getElementById('up-site').value, file.name, file.type || 'application/octet-stream', b64);
+      } catch (e) { Swal.showValidationMessage(e.message || String(e)); return false; }
+    }
+  }).then(async r => { if (r.isConfirmed) { await refresh(); document.getElementById('file-site-select').value = r.value.siteId; renderSiteFiles(); toast('success', 'อัปโหลดขึ้น Drive แล้ว'); } });
+}
+
+async function removeFile(id) {
+  const r = await Swal.fire({ title: 'ลบไฟล์นี้?', text: 'ไฟล์จะถูกย้ายไปถังขยะใน Drive', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบ', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#dc2626' });
+  if (!r.isConfirmed) return;
+  try { await api('deleteRecord', 'files', id); await refresh(); toast('success', 'ลบแล้ว'); }
+  catch (e) { Swal.fire('ลบไม่สำเร็จ', e.message || String(e), 'error'); }
+}
+
+/* Reports & Export Excel */
+const FILE_FIELDS = [{ k: 'siteId', l: 'หน้างาน', type: 'ref', ref: 'sites' }, { k: 'fileName', l: 'ชื่อไฟล์' }, { k: 'size', l: 'ขนาด (byte)' }, { k: 'url', l: 'ลิงก์ Drive' }];
+function renderReportCounts() {
+  ['technicians', 'homeowners', 'sites', 'assignments', 'files'].forEach(k => {
+    const el = document.getElementById('rep-' + k); if (el) el.textContent = (DB[k] || []).length + ' รายการ';
+  });
+}
+function sheetRows(key) {
+  const fields = key === 'files' ? FILE_FIELDS : ENT[key].fields;
+  return DB[key].map(r => {
+    const o = { 'ID': r.id };
+    fields.forEach(f => { o[f.l] = f.type === 'ref' ? cellValue(f, r) : (r[f.k] || ''); });
+    if (key !== 'files') (ENT[key].extra || []).forEach(e => { o[e.l] = e.ids(r).map(i => { const x = DB[e.k].find(y => y.id === i); return x ? REL_TYPES[e.k].lab(x) : ''; }).join(', '); });
+    o['สร้างเมื่อ'] = r.createdAt; o['สร้างโดย'] = r.createdBy;
+    return o;
+  });
+}
+function exportExcel(key) {
+  if (!window.XLSX) { Swal.fire('ไม่พบไลบรารี Excel', '', 'error'); return; }
+  const keys = key === 'all' ? ['technicians', 'homeowners', 'sites', 'assignments', 'files'] : [key];
+  const names = { technicians: 'ลูกค้าช่าง', homeowners: 'ลูกค้าบ้าน', sites: 'หน้างาน', assignments: 'ช่างสร้างบ้านให้ลูกค้า', files: 'ไฟล์หน้างาน' };
+  const wb = XLSX.utils.book_new();
+  keys.forEach(k => {
+    const rows = sheetRows(k);
+    const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ 'ไม่มีข้อมูล': '' }]);
+    XLSX.utils.book_append_sheet(wb, ws, names[k]);
+  });
+  const d = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, 'HomePro_TechConnect_' + (key === 'all' ? 'all' : key) + '_' + d + '.xlsx');
+  toast('success', 'ส่งออกไฟล์ Excel แล้ว');
+}
+
+/* Audit Logs */
+async function loadAudit() {
+  const box = document.getElementById('audit-box');
+  box.innerHTML = '<div class="bg-white p-6 rounded-2xl border text-sm text-gray-400">กำลังโหลด...</div>';
+  try {
+    const rows = await api('getAuditLogs', 200);
+    const act = { create: 'เพิ่ม', update: 'แก้ไข', delete: 'ลบ', upload: 'อัปโหลด', import: 'นำเข้า', login: 'เข้าสู่ระบบ' };
+    box.innerHTML = `<div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8">
+      <div class="flex justify-between items-center pb-4 border-b border-gray-100"><div><h3 class="font-bold text-gray-800 text-xl">Audit Logs</h3><p class="text-xs text-gray-500 mt-1">200 รายการล่าสุด</p></div>
+      <button onclick="loadAudit()" class="text-homepro-blue text-sm font-semibold hover:underline">รีเฟรช</button></div>
+      <div class="overflow-x-auto mt-4"><table class="min-w-full"><thead class="bg-gray-50"><tr>${['เวลา', 'ผู้ใช้', 'การกระทำ', 'ตาราง', 'รหัส'].map(h => `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500">${h}</th>`).join('')}</tr></thead><tbody>
+      ${rows.length ? rows.map(r => `<tr class="border-t border-gray-100"><td class="px-4 py-2 text-xs text-gray-500 whitespace-nowrap">${esc(r.timestamp)}</td><td class="px-4 py-2 text-sm">${esc(r.user)}</td><td class="px-4 py-2 text-sm font-semibold">${esc(act[r.action] || r.action)}</td><td class="px-4 py-2 text-sm">${esc(r.entity)}</td><td class="px-4 py-2 text-xs text-gray-500">${esc(r.recordId)}</td></tr>`).join('') : '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">ยังไม่มีบันทึก</td></tr>'}
+      </tbody></table></div></div>`;
+  } catch (e) { box.innerHTML = `<div class="bg-white p-6 rounded-2xl border text-sm text-red-500">${esc(e.message || e)}</div>`; }
+}
+
+/* Team Performance & Relationships */
+function renderTeam() {
+  const box = document.getElementById('team-box'); if (!box) return;
+  const keys = ['technicians', 'homeowners', 'sites', 'assignments', 'files'];
+  const cutoff = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+  const by = {};
+  keys.forEach(k => DB[k].forEach(r => {
+    const u = r.createdBy || 'ไม่ระบุ';
+    const o = by[u] || (by[u] = { total: 0, recent: 0 });
+    o[k] = (o[k] || 0) + 1; o.total++;
+    if ((r.createdAt || '') >= cutoff) o.recent++;
+  }));
+  const rows = Object.entries(by).sort((a, b) => b[1].total - a[1].total);
+  const max = rows.length ? rows[0][1].total : 1;
+  const total = rows.reduce((n, [, o]) => n + o.total, 0);
+  const card = (t, v) => `<div class="bg-white p-5 rounded-2xl border shadow-sm"><p class="text-xs font-semibold uppercase text-gray-500">${t}</p><h3 class="text-3xl font-bold text-gray-800 mt-1">${v}</h3></div>`;
+  box.innerHTML = `
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">${card('รายการที่บันทึกทั้งหมด', total)}${card('พนักงานที่มีผลงาน', rows.length)}${card('บันทึกใน 30 วันล่าสุด', rows.reduce((n, [, o]) => n + o.recent, 0))}</div>
+    <div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8 mt-6">
+      <h3 class="font-bold text-gray-800 text-xl">ผลงานทีมแยกตามผู้บันทึก</h3>
+      <div class="overflow-x-auto mt-4"><table class="min-w-full"><thead class="bg-gray-50"><tr>
+        ${['ผู้บันทึก', 'ลูกค้าช่าง', 'ลูกค้าบ้าน', 'หน้างาน', 'ช่าง–ลูกค้าบ้าน', 'ไฟล์', '30 วัน', 'รวม'].map(h => `<th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap">${h}</th>`).join('')}</tr></thead><tbody>
+        ${rows.length ? rows.map(([u, o]) => `<tr class="border-t border-gray-100">
+          <td class="px-4 py-3 text-sm font-semibold text-gray-800">${esc(u)}</td>
+          ${keys.map(k => `<td class="px-4 py-3 text-sm text-gray-700">${o[k] || 0}</td>`).join('')}
+          <td class="px-4 py-3 text-sm text-gray-700">${o.recent}</td>
+          <td class="px-4 py-3 w-48"><div class="flex items-center gap-2"><div class="h-2 rounded-full bg-homepro-blue" style="width:${Math.round(o.total / max * 100)}%"></div><span class="text-sm font-bold">${o.total}</span></div></td></tr>`).join('')
+          : '<tr><td colspan="8" class="px-4 py-8 text-center text-sm text-gray-400">ยังไม่มีข้อมูล</td></tr>'}
+      </tbody></table></div></div>`;
+}
+
+const REL_TYPES = { technicians: { l: 'ลูกค้าช่าง', c: 'bg-blue-100 text-blue-700', lab: r => r.name },
+                    homeowners: { l: 'ลูกค้า', c: 'bg-yellow-100 text-yellow-700', lab: r => r.name },
+                    sites: { l: 'หน้างาน', c: 'bg-green-100 text-green-700', lab: r => r.siteName } };
+const byId = (k, id) => DB[k].find(r => r.id === id);
+const relLink = (k, r) => r ? `<button onclick="relShow('${k}','${esc(r.id)}')" class="text-homepro-blue hover:underline font-semibold text-sm">${esc(REL_TYPES[k].lab(r))}</button>` : '<span class="text-gray-400 text-sm">-</span>';
+function relSearch() {
+  const q = document.getElementById('rel-q').value.trim().toLowerCase(), box = document.getElementById('rel-results');
+  if (!q) { box.innerHTML = ''; return; }
+  const hits = [];
+  Object.keys(REL_TYPES).forEach(k => DB[k].forEach(r => {
+    if (Object.values(r).some(v => String(v).toLowerCase().includes(q)) && hits.length < 30) hits.push([k, r]);
+  }));
+  box.innerHTML = hits.length ? hits.map(([k, r]) => `<button onclick="relShow('${k}','${esc(r.id)}')" class="px-3 py-2 rounded-xl border text-sm hover:bg-gray-50 flex items-center gap-2"><span class="text-xs px-2 py-0.5 rounded-full ${REL_TYPES[k].c}">${REL_TYPES[k].l}</span>${esc(REL_TYPES[k].lab(r))}</button>`).join('')
+    : '<p class="text-sm text-gray-400">ไม่พบข้อมูล</p>';
+}
+function relShow(k, id) {
+  const r = byId(k, id), out = document.getElementById('rel-detail'); if (!r) return;
+  const sec = (t, inner) => `<div class="mt-4"><p class="text-xs font-semibold text-gray-500 uppercase mb-2">${t}</p><div class="flex flex-wrap gap-x-4 gap-y-1">${inner || '<span class="text-gray-400 text-sm">ไม่มี</span>'}</div></div>`;
+  let body = '';
+  if (k === 'technicians') {
+    const hs = homeownersOfTech(id), asg = DB.assignments.filter(a => a.technicianId === id);
+    body = sec('ลูกค้าบ้านของช่างคนนี้ (' + hs.length + ')', hs.map(h => relLink('homeowners', byId('homeowners', h))).join(''))
+         + sec('หน้างานที่เกี่ยวข้อง', [...new Set(asg.map(a => a.siteId).filter(Boolean))].map(x => relLink('sites', byId('sites', x))).join(''));
+  } else if (k === 'homeowners') {
+    const ts = techsOfHomeowner(id);
+    body = sec('ช่างที่สร้างบ้านให้ลูกค้ารายนี้ (' + ts.length + ')', ts.map(t => relLink('technicians', byId('technicians', t))).join(''))
+         + sec('หน้างานของลูกค้า', DB.sites.filter(x => x.homeownerId === id).map(x => relLink('sites', x)).join(''));
+  } else {
+    const ts = [...new Set(DB.assignments.filter(a => a.siteId === id).map(a => a.technicianId))];
+    body = sec('เจ้าของบ้าน', relLink('homeowners', byId('homeowners', r.homeownerId)))
+         + sec('ช่างที่ทำหน้างานนี้ (' + ts.length + ')', ts.map(t => relLink('technicians', byId('technicians', t))).join(''))
+         + sec('ไฟล์เอกสาร', DB.files.filter(f => f.siteId === id).length + ' ไฟล์');
+  }
+  const info = Object.entries(r).filter(([n, v]) => v && !['id', 'createdAt', 'createdBy', 'updatedAt', 'homeownerId'].includes(n)).map(([n, v]) => esc(v)).join(' · ');
+  out.innerHTML = `<div class="bg-white rounded-2xl shadow-sm border p-6 lg:p-8"><span class="text-xs px-2 py-0.5 rounded-full ${REL_TYPES[k].c}">${REL_TYPES[k].l}</span>
+    <h3 class="font-bold text-gray-800 text-xl mt-2">${esc(REL_TYPES[k].lab(r))} <span class="text-xs text-gray-400 font-normal">${esc(r.id)}</span></h3>
+    <p class="text-sm text-gray-500 mt-1">${info}</p>${body}</div>`;
+}
+
+/* Charts */
+const CH = {};
+const PALETTE = ['#004B87', '#FFB81C', '#16a34a', '#9333ea', '#ef4444', '#0891b2', '#94a3b8'];
+function drawChart(id, cfg) {
+  const el = document.getElementById(id);
+  if (!el || !window.Chart) return;
+  if (CH[id]) CH[id].destroy();
+  CH[id] = new Chart(el, Object.assign({ options: {} }, cfg, { options: Object.assign({ responsive: true, maintainAspectRatio: false }, cfg.options || {}) }));
+}
+function renderCharts() {
+  const dash = document.getElementById('view-dashboard');
+  if (!dash || dash.classList.contains('hidden')) return;
+  const months = [], now = new Date();
+  for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }
+  const cnt = months.map(m => ['technicians', 'homeowners', 'sites', 'assignments'].reduce((n, k) => n + DB[k].filter(r => (r.createdAt || '').slice(0, 7) === m).length, 0));
+  drawChart('ch-month', { type: 'bar', data: { labels: months, datasets: [{ data: cnt, backgroundColor: '#004B87', borderRadius: 6 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+
+  const sp = {};
+  DB.technicians.forEach(t => { const k = t.specialty || 'ไม่ระบุ'; sp[k] = (sp[k] || 0) + 1; });
+  const top = Object.entries(sp).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  drawChart('ch-spec', { type: 'bar', data: { labels: top.map(x => x[0]), datasets: [{ data: top.map(x => x[1]), backgroundColor: '#FFB81C', borderRadius: 6 }] },
+    options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
+
+  const st = {};
+  DB.sites.forEach(x => { const k = x.status || 'ไม่ระบุ'; st[k] = (st[k] || 0) + 1; });
+  drawChart('ch-site', { type: 'doughnut', data: { labels: Object.keys(st), datasets: [{ data: Object.values(st), backgroundColor: PALETTE }] },
+    options: { plugins: { legend: { position: 'bottom' } } } });
+
+  const rank = DB.technicians.map(t => [t.name, homeownersOfTech(t.id).length]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  drawChart('ch-top', { type: 'bar', data: { labels: rank.map(x => x[0]), datasets: [{ data: rank.map(x => x[1]), backgroundColor: '#004B87', borderRadius: 6 }] },
+    options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
+  
+  const total = DB.assignments.reduce((n, a) => n + (Number(a.value) || 0), 0), withVal = DB.assignments.filter(a => Number(a.value) > 0).length;
+  const js = document.getElementById('job-summary');
+  if (js) js.textContent = withVal ? 'มูลค่างานรวม ฿' + total.toLocaleString('th-TH') + ' จาก ' + withVal + ' งาน' : 'ยังไม่มีข้อมูลมูลค่างาน';
+}
+
+/* Login / Logout */
+function setLoginMsg(text, kind) {
+  const el = document.getElementById('login-msg');
+  if (!text) { el.classList.add('hidden'); return; }
+  el.className = 'mt-5 text-sm rounded-xl px-4 py-3 ' + (kind === 'info' ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-600');
+  el.textContent = text;
+}
+const LF = 'w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300';
+const BTN = 'w-full bg-homepro-blue hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm disabled:opacity-60';
+function loginField(id, label, type, extra) {
+  return `<label class="block text-xs font-semibold text-gray-600 mb-3">${label}<input id="${id}" type="${type || 'text'}" class="${LF} mt-1" ${extra || ''} onkeydown="if(event.key==='Enter')submitLoginForm()"></label>`;
+}
+let LOGIN_MODE = 'login';
+async function showLogin(msg, kind) {
+  saveToken('');
+  ME = { role: null };
+  DB = { technicians: [], homeowners: [], sites: [], assignments: [], files: [], users: [] };
+  try { renderAll(); } catch (e) { }
+  document.getElementById('login-screen').style.display = 'flex';
+  setLoginMsg(msg || '', kind || 'error');
+  const body = document.getElementById('login-body');
+
+  if (!apiUrl() || apiUrl().includes('YOUR_SCRIPT_ID')) {
+    setLoginMsg('กรุณาใส่ URL Web App ของ Apps Script ที่ตัวแปร API_URL_CONST ในไฟล์ index.html', 'error');
+    body.innerHTML = `<div class="p-4 bg-yellow-50 text-yellow-800 rounded-xl text-xs space-y-2">
+      <p class="font-bold">วิธีตั้งค่า:</p>
+      <p>1. เปิดไฟล์ <b>index.html</b> ด้วยโปรแกรม Text Editor (เช่น Notepad หรือ VS Code)</p>
+      <p>2. ค้นหาบรรทัด <b>const API_URL_CONST =''</b></p>
+      <p>3. นำ URL Web App (ที่ลงท้ายด้วย <b>/exec</b>) มาวางแทนที่</p>
+    </div>`;
+    return;
+  }
+
+  body.innerHTML = '<p class="text-center text-sm text-gray-400">กำลังตรวจสอบระบบ...</p>';
+  let st = { needsSetup: false, setupReady: true };
+  try { st = await rawCall('getLoginState'); } catch (e) { setLoginMsg(e.message, 'error'); }
+  LOGIN_MODE = st.needsSetup ? 'setup' : 'login';
+  if (st.needsSetup) {
+    body.innerHTML = `<h2 class="font-bold text-gray-800 mb-4 text-center">ตั้งค่าผู้ดูแลระบบคนแรก</h2>
+      ${loginField('lg-code', 'รหัสตั้งค่า (SETUP_CODE ใน Apps Script)', 'password', 'autocomplete="off"')}
+      ${loginField('lg-user', 'ชื่อผู้ใช้ (a-z 0-9 . _ -)', 'text', 'autocomplete="username"')}
+      ${loginField('lg-name', 'ชื่อที่แสดง', 'text')}
+      ${loginField('lg-pass', 'รหัสผ่าน (อย่างน้อย 8 ตัว)', 'password', 'autocomplete="new-password"')}
+      ${loginField('lg-pass2', 'ยืนยันรหัสผ่าน', 'password', 'autocomplete="new-password"')}
+      <button id="lg-btn" onclick="submitLoginForm()" class="${BTN} mt-1">สร้างผู้ดูแลและเข้าสู่ระบบ</button>`;
+    document.getElementById('lg-code').focus();
+  } else {
+    body.innerHTML = `${loginField('lg-user', 'ชื่อผู้ใช้', 'text', 'autocomplete="username" autocapitalize="none"')}
+      ${loginField('lg-pass', 'รหัสผ่าน', 'password', 'autocomplete="current-password"')}
+      <label class="flex items-center text-xs text-gray-500 mb-4 cursor-pointer"><input type="checkbox" class="mr-2" onchange="document.getElementById('lg-pass').type=this.checked?'text':'password'"> แสดงรหัสผ่าน</label>
+      <button id="lg-btn" onclick="submitLoginForm()" class="${BTN}">เข้าสู่ระบบ</button>`;
+    document.getElementById('lg-user').focus();
+  }
+}
+
+async function submitLoginForm() {
+  const v = id => (document.getElementById(id) || {}).value || '';
+  const btn = document.getElementById('lg-btn');
+  try {
+    let r;
+    if (LOGIN_MODE === 'setup') {
+      if (v('lg-pass') !== v('lg-pass2')) { setLoginMsg('รหัสผ่านทั้งสองช่องไม่ตรงกัน', 'error'); return; }
+      btn.disabled = true; btn.textContent = 'กำลังสร้าง...';
+      r = await rawCall('setupFirstAdmin', v('lg-code'), v('lg-user').trim(), v('lg-name').trim(), v('lg-pass'));
+    } else {
+      if (!v('lg-user').trim() || !v('lg-pass')) { setLoginMsg('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', 'error'); return; }
+      btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+      r = await rawCall('login', v('lg-user').trim(), v('lg-pass'));
+    }
+    saveToken(r.token);
+    await startApp(r.user);
+  } catch (e) {
+    setLoginMsg(e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = LOGIN_MODE === 'setup' ? 'สร้างผู้ดูแลและเข้าสู่ระบบ' : 'เข้าสู่ระบบ'; }
+  }
+}
+
+async function startApp(u) {
+  ME = u;
+  document.getElementById('user-display-name').textContent = u.name || u.username;
+  document.getElementById('user-display-role').textContent = u.role;
+  document.getElementById('user-avatar-initials').textContent = (u.name || u.username || 'HP').slice(0, 2).toUpperCase();
+  document.getElementById('login-screen').style.display = 'none';
+  setLoginMsg('');
+  switchView('dashboard');
+  try { await api('initDb'); await refresh(); }
+  catch (e) { if (TOKEN) Swal.fire('โหลดข้อมูลไม่สำเร็จ', e.message || String(e), 'error'); }
+}
+async function logout() {
+  const t = TOKEN;
+  try { await rawCall('logout', t); } catch (e) { }
+  showLogin('ออกจากระบบแล้ว', 'info');
+}
+function accountMenu() {
+  if (!ME.role) return;
+  Swal.fire({ title: esc(ME.name || ME.username), html: `<p class="text-sm text-gray-500">${esc(ME.username)} · ${esc(ME.role)}</p>`,
+    showDenyButton: true, showCancelButton: true, confirmButtonText: 'เปลี่ยนรหัสผ่าน', denyButtonText: 'ออกจากระบบ', cancelButtonText: 'ปิด', confirmButtonColor: '#004B87' })
+    .then(r => { if (r.isConfirmed) changePw(); else if (r.isDenied) logout(); });
+}
+function changePw() {
+  const cls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm';
+  Swal.fire({ title: 'เปลี่ยนรหัสผ่าน',
+    html: `<div class="text-left space-y-3">
+      <label class="block text-xs font-semibold text-gray-600">รหัสผ่านเดิม<input id="pw-old" type="password" class="${cls}"></label>
+      <label class="block text-xs font-semibold text-gray-600">รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)<input id="pw-new" type="password" class="${cls}"></label>
+      <label class="block text-xs font-semibold text-gray-600">ยืนยันรหัสผ่านใหม่<input id="pw-new2" type="password" class="${cls}"></label></div>`,
+    showCancelButton: true, confirmButtonText: 'บันทึก', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#004B87', showLoaderOnConfirm: true,
+    preConfirm: async () => {
+      const o = document.getElementById('pw-old').value, n = document.getElementById('pw-new').value, n2 = document.getElementById('pw-new2').value;
+      if (!o || !n) { Swal.showValidationMessage('กรุณากรอกให้ครบ'); return false; }
+      if (n.length < 8) { Swal.showValidationMessage('รหัสผ่านใหม่ต้องยาวอย่างน้อย 8 ตัว'); return false; }
+      if (n !== n2) { Swal.showValidationMessage('รหัสผ่านใหม่ไม่ตรงกัน'); return false; }
+      try { return await api('changePassword', o, n); } catch (e) { Swal.showValidationMessage(e.message); return false; }
+    } }).then(r => { if (r.isConfirmed) toast('success', 'เปลี่ยนรหัสผ่านแล้ว'); });
+}
+
+/* Boot */
+document.addEventListener('DOMContentLoaded', async () => {
+  if (window.lucide) lucide.createIcons();
+  switchView('dashboard');
+  if (!apiUrl() || apiUrl().includes('YOUR_SCRIPT_ID')) { showLogin(); return; }
+  if (TOKEN) {
+    try { await startApp(await api('getCurrentUser')); return; }
+    catch (e) { if (!String(e.message).includes('หมดเวลา')) showLogin(e.message, 'error'); return; }
+  }
+  showLogin();
+});
+</script>
+</body>
+</html>
