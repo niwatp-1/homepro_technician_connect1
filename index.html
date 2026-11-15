@@ -325,7 +325,7 @@
 /* ========================================================================== */
 /* 🛠️ กำหนด URL Web App ของ Google Apps Script ที่นี่                         */
 /* ========================================================================== */
-const API_URL_CONST = 'https://script.google.com/macros/s/AKfycbz2i530fEz3fzjQ7lsNX_BU1FioSBdkgCYfnVgEhPOOnwZU9CjAwDRoMexXO-wZwiGy/exec';
+const API_URL_CONST = 'https://script.google.com/macros/s/AKfycbysGldHXzO3VO8wS7tfnauiQK2sO735RDL2upCNsKcaImfm6-Kp0ldQxdkOuzXWXHPH/exec';
 
 /* ============ Config & Entities ============ */
 const ENT = {
@@ -542,11 +542,11 @@ function renderTable(key) {
   const view = rows.slice((t.page - 1) * PAGE_SIZE, t.page * PAGE_SIZE);
   const th = (k, l) => `<th onclick="sortBy('${key}','${k}')" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap cursor-pointer select-none hover:text-homepro-blue">${esc(l)}${t.sort === k ? (t.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`;
   const body = view.length ? view.map(r => `
-    <tr class="border-t border-gray-100 hover:bg-gray-50">
-      <td class="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">${esc(r.id)}</td>
-      ${cols.map(f => `<td class="px-4 py-3 text-sm text-gray-700">${esc(cellValue(f, r))}</td>`).join('')}
-      ${(c.extra || []).map(e => `<td class="px-4 py-3">${chips(e.k, e.ids(r))}</td>`).join('')}
-      <td class="px-4 py-3 text-right whitespace-nowrap">
+    <tr class="border-t border-gray-100 hover:bg-gray-50" style="height:52px" data-rid="${esc(r.id)}">
+      <td class="px-4 py-3 text-xs text-gray-400 whitespace-nowrap align-middle">${esc(r.id)}</td>
+      ${cols.map(f => { const v = cellValue(f, r); const inner = (key === 'sites' && f.k === 'siteName') ? `<button type="button" onclick="selectSite('${esc(r.id)}')" class="text-homepro-blue font-semibold hover:underline text-left" title="ดูไฟล์เอกสารของหน้างานนี้">${esc(v)}</button>` : esc(v); return `<td class="px-4 py-3 text-sm text-gray-700 align-middle" style="white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis" title="${esc(v)}">${inner}</td>`; }).join('')}
+      ${(c.extra || []).map(e => `<td class="px-4 py-3 align-middle" style="white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis">${chips(e.k, e.ids(r))}</td>`).join('')}
+      <td class="px-4 py-3 text-right whitespace-nowrap align-middle">
         ${key === 'technicians' && canDo(key, 'update') ? `<button onclick="markContacted('${esc(r.id)}')" class="text-green-600 text-xs font-semibold hover:underline mr-3">ติดต่อแล้ว</button>` : ''}
         ${canDo(key, 'update') ? `<button onclick="openForm('${key}','${esc(r.id)}')" class="text-homepro-blue text-xs font-semibold hover:underline mr-3">แก้ไข</button>` : ''}
         ${canDo(key, 'delete') ? `<button onclick="removeRow('${key}','${esc(r.id)}')" class="text-red-500 text-xs font-semibold hover:underline">ลบ</button>` : ''}
@@ -557,6 +557,7 @@ function renderTable(key) {
       <span>หน้า ${t.page} / ${pages}</span>
       <span><button ${t.page <= 1 ? 'disabled' : ''} onclick="goPage('${key}',-1)" class="px-3 py-1.5 border rounded-lg mr-2 ${t.page <= 1 ? 'opacity-40' : 'hover:bg-gray-50'}">ก่อนหน้า</button><button ${t.page >= pages ? 'disabled' : ''} onclick="goPage('${key}',1)" class="px-3 py-1.5 border rounded-lg ${t.page >= pages ? 'opacity-40' : 'hover:bg-gray-50'}">ถัดไป</button></span>
     </div>`;
+  if (key === 'sites') highlightSiteRow();
   const cnt = document.getElementById('cnt-' + key);
   if (cnt) cnt.textContent = (rows.length === DB[key].length ? DB[key].length + ' รายการ' : 'พบ ' + rows.length + ' จาก ' + DB[key].length + ' รายการ') + ' · ซิงค์กับ Google Sheet';
 }
@@ -649,7 +650,10 @@ function renderSiteFiles() {
   const list = DB.files.filter(f => f.siteId === sel.value);
   box.innerHTML = list.length ? list.map(f => `
     <div class="p-4 bg-gray-50 border rounded-xl flex items-center justify-between gap-3">
-      <div class="min-w-0">
+      <a href="${esc(f.url)}" target="_blank" rel="noopener" class="flex-shrink-0 block w-16 h-16 rounded-lg overflow-hidden bg-white border flex items-center justify-center" data-thumb="${esc(f.driveId)}" title="เปิดไฟล์">
+        ${THUMBS[f.driveId] ? `<img src="${THUMBS[f.driveId]}" alt="" class="w-full h-full object-cover">` : `<span class="text-2xl">${fileIcon(f)}</span>`}
+      </a>
+      <div class="min-w-0 flex-1">
         <p class="text-sm font-semibold text-gray-800 truncate" title="${esc(f.fileName)}">${esc(f.fileName)}</p>
         <span class="text-xs text-gray-500">${fmtSize(f.size)} · ${esc(f.createdAt)}</span>
       </div>
@@ -658,6 +662,41 @@ function renderSiteFiles() {
         ${canDo('files', 'delete') ? `<button onclick="removeFile('${esc(f.id)}')" class="text-red-500 text-xs font-semibold hover:underline">ลบ</button>` : ''}
       </div>
     </div>`).join('') : '<p class="text-sm text-gray-400 col-span-full py-6 text-center">ยังไม่มีไฟล์ในหน้างานนี้</p>';
+  loadThumbs(list);
+  highlightSiteRow();
+}
+function highlightSiteRow() {
+  const sel = document.getElementById('file-site-select'); if (!sel) return;
+  document.querySelectorAll('#tbl-sites tr[data-rid]').forEach(tr => tr.classList.toggle('bg-blue-50', tr.dataset.rid === sel.value));
+}
+function selectSite(id) {
+  const sel = document.getElementById('file-site-select'); if (!sel) return;
+  sel.value = id;
+  renderSiteFiles();
+  const card = document.getElementById('site-files-container');
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+const THUMBS = {};
+const THUMB_TRIED = {};
+const fileIcon = f => { const m = String(f.mimeType || '').toLowerCase(), n = String(f.fileName || '').toLowerCase();
+  if (m.startsWith('image/')) return '🖼️'; if (m.includes('pdf') || n.endsWith('.pdf')) return '📕';
+  if (m.includes('sheet') || m.includes('excel') || /\.(xlsx?|csv)$/.test(n)) return '📊';
+  if (m.includes('word') || /\.docx?$/.test(n)) return '📝'; if (m.startsWith('video/')) return '🎞️'; return '📎'; };
+async function loadThumbs(list) {
+  const need = list.map(f => f.driveId).filter(id => id && !THUMBS[id] && !THUMB_TRIED[id]);
+  for (let i = 0; i < need.length; i += 6) {
+    const batch = need.slice(i, i + 6);
+    batch.forEach(id => THUMB_TRIED[id] = true);
+    try {
+      const res = await api('getFileThumbs', batch);
+      Object.keys(res || {}).forEach(id => {
+        THUMBS[id] = res[id];
+        document.querySelectorAll('[data-thumb="' + id + '"]').forEach(a => { a.innerHTML = '<img src="' + res[id] + '" alt="" class="w-full h-full object-cover">'; });
+      });
+      // ไฟล์ที่เพิ่งอัปโหลด Drive อาจยังสร้างภาพย่อไม่เสร็จ ให้ลองใหม่อีกครั้งภายหลัง
+      batch.filter(id => !res || !res[id]).forEach(id => setTimeout(() => { delete THUMB_TRIED[id]; }, 15000));
+    } catch (e) { batch.forEach(id => delete THUMB_TRIED[id]); break; }
+  }
 }
 
 function openUploadModal(siteId) {
@@ -1082,24 +1121,50 @@ function downloadSheet(name, cols) {
 }
 function downloadTemplate(key) { downloadSheet('แม่แบบ_' + (SHEET_NAMES[key] || key), tplCols(key)); }
 function downloadRelTemplate() { downloadSheet('แม่แบบ_ช่างสร้างบ้านให้ลูกค้า', REL_COLS); }
+const COL_ALIASES = {
+  name: ['ชื่อ', 'ชื่อสกุล', 'ชื่อลูกค้า', 'ชื่อช่าง', 'fullname', 'name'],
+  phone: ['เบอร์', 'เบอร์โทร', 'เบอร์โทรศัพท์', 'โทร', 'โทรศัพท์', 'เบอร์ติดต่อ', 'tel', 'phone', 'mobile'],
+  homecard: ['homecard', 'เลขhomecard', 'รหัสลูกค้า', 'เลขบัตร', 'เลขที่บัตร', 'เลขhomecardรหัสลูกค้า'],
+  shopName: ['ร้าน', 'ชื่อร้าน', 'ทีมช่าง', 'ชื่อทีม', 'ชื่อร้านทีมช่าง'],
+  specialty: ['ประเภทงาน', 'ประเภทช่าง', 'สาขาช่าง', 'ความชำนาญ', 'ประเภทงานช่าง'],
+  area: ['พื้นที่', 'พื้นที่ให้บริการ', 'พื้นที่บริการ'],
+  lineId: ['line', 'lineid', 'ไลน์', 'ไลน์id'],
+  note: ['หมายเหตุ', 'note', 'remark'],
+  address: ['ที่อยู่', 'address']
+};
+const normHead = s => String(s == null ? '' : s).replace(/^\uFEFF/, '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[\s\-_\/.:,]+/g, '');
+function mapRows(raw, cols, phoneKeys) {
+  const map = {};
+  cols.forEach(c => { map[normHead(c[0])] = c[1]; map[normHead(c[1])] = c[1]; (COL_ALIASES[c[1]] || []).forEach(a => { if (!map[normHead(a)]) map[normHead(a)] = c[1]; }); });
+  const rows = raw.map((r, i) => {
+    const o = { __row: i + 2 };
+    Object.keys(r).forEach(hd => { const k = map[normHead(hd)]; if (k && String(r[hd]).trim() !== '') o[k] = String(r[hd]).trim(); });
+    phoneKeys.forEach(pk => { if (o[pk]) o[pk] = normPhone(o[pk]); });
+    return o;
+  }).filter(o => Object.keys(o).length > 1);
+  return rows;
+}
 function pickExcel(cols, phoneKeys, onRows) {
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.xlsx,.xls,.csv';
-  inp.onchange = async () => {
-    const file = inp.files[0]; if (!file) return;
+  if (typeof XLSX === 'undefined') return Swal.fire('นำเข้าไม่ได้', 'โหลดไลบรารี Excel ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า', 'error');
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.xlsx,.xls,.csv'; inp.style.display = 'none';
+  document.body.appendChild(inp);
+  const cleanup = () => setTimeout(() => inp.remove(), 0);
+  inp.addEventListener('cancel', cleanup);
+  inp.addEventListener('change', async () => {
+    const file = inp.files && inp.files[0];
+    cleanup();
+    if (!file) return;
     try {
+      Swal.fire({ title: 'กำลังอ่านไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
       const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '', raw: false });
-      const map = {}; cols.forEach(c => { map[c[0]] = c[1]; map[c[1]] = c[1]; });
-      const rows = raw.map((r, i) => {
-        const o = { __row: i + 2 };
-        Object.keys(r).forEach(h => { const k = map[String(h).trim()]; if (k) o[k] = String(r[h]).trim(); });
-        phoneKeys.forEach(pk => { if (o[pk]) o[pk] = normPhone(o[pk]); });
-        return o;
-      }).filter(o => Object.keys(o).length > 1);
-      if (!rows.length) return Swal.fire('ไม่พบข้อมูล', 'หัวคอลัมน์ต้องตรงกับไฟล์แม่แบบ', 'warning');
+      const rows = mapRows(raw, cols, phoneKeys);
+      if (!rows.length) return Swal.fire({ icon: 'warning', title: 'ไม่พบข้อมูลที่นำเข้าได้',
+        html: '<div class="text-left text-sm">หัวคอลัมน์แถวแรกควรเป็น:<br>' + cols.map(c => esc(c[0])).join(' | ') + '<br><br>แนะนำให้ดาวน์โหลดแม่แบบแล้วกรอกตามนั้น</div>' });
       await onRows(rows);
     } catch (e) { Swal.fire('นำเข้าไม่สำเร็จ', cleanErr(e), 'error'); }
-  };
+  });
   inp.click();
 }
 async function showImportResult(res) {
